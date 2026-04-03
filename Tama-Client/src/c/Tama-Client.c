@@ -377,6 +377,7 @@ static void init() {
 static void deinit() {
   window_destroy(s_main_window);
 }
+// hello world
 
 int main(void) {
   init();
