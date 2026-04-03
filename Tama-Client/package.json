@@ -1,0 +1,87 @@
+{
+    "author": "Stefan Bauwens",
+    "dependencies": {},
+    "keywords": [
+        "pebble-app"
+    ],
+    "name": "tamagotchi",
+    "pebble": {
+        "displayName": "Tamagotchi",
+        "enableMultiJS": true,
+        "messageKeys": [
+            "Screen",
+            "SelectedIcon",
+            "ShowingAttentionIcon",
+            "Button",
+            "JSReady"
+        ],
+        "projectType": "native",
+        "resources": {
+            "media": [
+                {
+                    "file": "images/bgColor.png",
+                    "name": "BG_IMAGE",
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/bgNoColor.png",
+                    "name": "BG_IMAGE_BW",
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/1.png",
+                    "name": "ICON1",
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/2.png",
+                    "name": "ICON2",
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/3.png",
+                    "name": "ICON3",
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/4.png",
+                    "name": "ICON4",
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/5.png",
+                    "name": "ICON5",
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/6.png",
+                    "name": "ICON6",
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/7.png",
+                    "name": "ICON7",
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/8.png",
+                    "name": "ICON8",
+                    "type": "bitmap"
+                }
+            ]
+        },
+        "sdkVersion": "3",
+        "targetPlatforms": [
+            "aplite",
+            "basalt",
+            "chalk",
+            "diorite",
+            "flint"
+        ],
+        "uuid": "ea6c2440-8359-41db-b6cf-064522429ce1",
+        "watchapp": {
+            "watchface": false
+        }
+    },
+    "version": "1.0.0"
+}
