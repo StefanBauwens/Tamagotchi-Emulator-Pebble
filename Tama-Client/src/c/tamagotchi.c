@@ -1,8 +1,14 @@
 #define bitRead(value, bit) (((value) >> (bit)) & 0x01)
+#define FPS 30
+#define FPS_DELAY 1000/FPS //ms
+#define STEP_DELAY 1 //ms
+#define STEPS_PER_DELAY 30//55  //TODO
 
 //#undef PBL_COLOR // only used for testing B&W
 
 #include <pebble.h>
+#include "tamalib/tamalib.h"
+#include "rom.h"
 
 static Window *s_main_window;
 static BitmapLayer *s_background_layer;
@@ -20,22 +26,126 @@ static GBitmap *s_bitmap_icon6;
 static GBitmap *s_bitmap_icon7;
 static GBitmap *s_bitmap_icon8;
 
-static const uint8_t LCD_WIDTH  = 32;
-static const uint8_t LCD_HEIGHT = 16;
+//static const uint8_t LCD_WIDTH  = 32;
+//static const uint8_t LCD_HEIGHT = 16;
 
 static int8_t s_selectedIcon = -1; // -1 is none, 0-6 says what icon
 static bool s_showingAttentionIcon = true;
 static bool s_js_ready;
 static bool s_lastSaveSendSucceeded = true;
+static bool s_pixelsChanged = false;
 
-/*
-// Since there's issues with some characters being sent over we are only using characters @(dec:64) to DEL(dec:127).
-// There are issues with the characters dec 91, 92, 93, 123 and 125. Since we're using only the least significant bits 91, 92, 93 can be replaced with 27, 28, 29 respectively (on the sender side), since there's no issues with these chars.
-// We can't use the same for 123 and 125 since there's also issues with 59 and 61. So we will have to agree on a convention for those bytes. If we get dec. 0, we replace it with dec. 123 and 
-// dec. 1 we replace with dec. 125 (on this device)
-static char s_screen_buffer[86]; // 16*32 / 6 ≃ 86 (we use 6 bits, because issues with 7 and 8)
-*/
-static uint8_t s_screen_buffer[74]; // 7 bits - 75 = (16*32)/7
+static bool_t s_screen_buffer[LCD_HEIGHT][LCD_WIDTH] = {{0}};
+
+//ticks
+static AppTimer *milli_tick_handler;
+static AppTimer *screen_tick_handler;
+
+/*****************************/
+/*   START HAL T FUNCTIONS   */
+/*****************************/
+static void * hal_malloc(u32_t size) { return 0; } // unused
+static void hal_free(void *ptr) { } // unused
+
+static void hal_halt(void)
+{
+	//Not yet implemented
+  //TODO exit program?
+}
+
+static bool_t hal_is_log_enabled(log_level_t level) { return false; } // unused
+static void hal_log(log_level_t level, char *buff, ...) { } // unused
+
+static timestamp_t hal_get_timestamp(void) //TODO test
+{
+  time_t seconds;
+  uint16_t milliseconds;
+  time_ms(&seconds, &milliseconds);
+
+  //return microseconds
+  return (int)seconds * 1000000 + (int)milliseconds * 1000; 
+}
+
+static void hal_sleep_until(timestamp_t ts) //this makes the time be accurate
+{
+  while((int) (ts - hal_get_timestamp()) > 0);
+}
+
+static void hal_update_screen(void) //since we're not using tamalib_mainloop we must call this ourselves
+{
+  layer_mark_dirty(s_screen_layer); //Tell the system to redraw screen
+}
+
+static void hal_set_lcd_matrix(u8_t x, u8_t y, bool_t val)
+{
+  s_screen_buffer[y][x] = val; //TTODO
+  s_pixelsChanged = true;
+}
+
+static void hal_set_lcd_icon(u8_t icon, bool_t val)
+{
+  if (icon == 7)
+  {
+    s_showingAttentionIcon = val;
+  }
+  else
+  {
+    if (!val && s_selectedIcon == icon)
+    {
+      s_selectedIcon = -1;
+    }
+    else if (val)
+    {
+      s_selectedIcon = icon;
+    }
+  }
+  layer_mark_dirty(s_icons_layer);
+}
+
+static void hal_set_frequency(u32_t freq) { } //TODO later for pebbles with speaker?
+static void hal_play_frequency(bool_t en) { } //TODO later for pebbles with speaker?
+
+static int hal_handler(void)
+{
+  return 0;
+  //Not implemented as we're not using the tamalib_mainloop()
+}
+
+static hal_t hal = {
+	.malloc = &hal_malloc,
+	.free = &hal_free,
+	.halt = &hal_halt,
+	.is_log_enabled = &hal_is_log_enabled,
+	.log = &hal_log,
+	.sleep_until = &hal_sleep_until,
+	.get_timestamp = &hal_get_timestamp,
+	.update_screen = &hal_update_screen,
+	.set_lcd_matrix = &hal_set_lcd_matrix,
+	.set_lcd_icon = &hal_set_lcd_icon,
+	.set_frequency = &hal_set_frequency,
+	.play_frequency = &hal_play_frequency,
+	.handler = &hal_handler,
+};
+
+/***************************/
+/*   END HAL T FUNCTIONS   */
+/***************************/
+
+static void milli_tick() //runs once every ms.
+{
+  for (size_t i = 0; i < STEPS_PER_DELAY; i++) //TODO figure out how much to get an exact value
+  {
+      tamalib_step();
+  }  
+  milli_tick_handler = app_timer_register(STEP_DELAY, milli_tick, NULL); //calls itself in 1ms
+}
+
+static void screen_tick() //runs every 33 ms for about 30fps
+{
+  hal_update_screen();
+  screen_tick_handler = app_timer_register(FPS_DELAY, screen_tick, NULL);
+}
+
 
 static void SendSaveToPhone(int8_t value) //TODO to implement //TODO TODO TODO
 {
@@ -76,29 +186,29 @@ static void SendSaveToPhone(int8_t value) //TODO to implement //TODO TODO TODO
 // Button presses
 static void on_button_up_press(ClickRecognizerRef recognizer, void *context) //1
 {
-  //TODO
+  tamalib_set_button(BTN_LEFT, BTN_STATE_PRESSED);
 }
 static void on_button_select_press(ClickRecognizerRef recognizer, void *context) //2
 {
-  //TODO
+  tamalib_set_button(BTN_MIDDLE, BTN_STATE_PRESSED);
 }
 static void on_button_down_press(ClickRecognizerRef recognizer, void *context) //3
 {
-  //TODO
+  tamalib_set_button(BTN_RIGHT, BTN_STATE_PRESSED);
 }
 
 // Button releases
 static void on_button_up_release(ClickRecognizerRef recognizer, void *context) //4
 {
-  //TODO
+  tamalib_set_button(BTN_LEFT, BTN_STATE_RELEASED);
 }
 static void on_button_select_release(ClickRecognizerRef recognizer, void *context) //5
 {
-  //TODO
+  tamalib_set_button(BTN_MIDDLE, BTN_STATE_RELEASED);
 }
 static void on_button_down_release(ClickRecognizerRef recognizer, void *context) //6
 {
-  //TODO
+  tamalib_set_button(BTN_RIGHT, BTN_STATE_RELEASED);
 }
 
 static void click_config_provider(void *context) {
@@ -166,48 +276,14 @@ static void screen_update_proc(Layer *layer, GContext *ctx) {
   // draw new screen
   graphics_context_set_fill_color(ctx, GColorBlack);
 
-  //bool pixelOn = true;
-
-  // use 6 least signifcant pixels per byte
-  /*
-  uint16_t pixelCount = 0; 
-  uint8_t xPos = 0;
-  uint8_t yPos = 0;
-  for (uint8_t i = 0; i < 86; i++)
+  //draw pixels
+  for (size_t h = 0; h < LCD_HEIGHT; h++)
   {
-    for(uint8_t b = 0; b < 6; b++)
+    for (size_t w = 0; w < LCD_WIDTH; w++)
     {
-      if (pixelCount >= 512) // prevent excess since we're not working with the full amount of bytes
+      if (s_screen_buffer[h][w])
       {
-        break;
-      }
-
-      xPos = pixelCount%32;
-      yPos = pixelCount/32;
-
-      pixelOn = (bitRead(s_screen_buffer[i], 5 - b) == 1); // only checks the 6 least significant bits
-      if (pixelOn)
-      {
-        graphics_fill_rect(ctx, GRect((xPos) * 4, yPos * 4, 3, 3), 0, GCornerNone);
-      }
-
-      pixelCount++;
-    }
-  }*/
-
-  // use 7 least significant pixels per byte
-  for (uint8_t y = 0; y < LCD_HEIGHT; y++)
-  {
-    for (uint8_t x = 0; x < LCD_WIDTH; x++)
-    {
-      uint16_t charIndex = ((y * LCD_WIDTH) + x) / 7; // auto floored
-      uint8_t rest = ((y * LCD_WIDTH) + x) % 7;
-      uint8_t character = s_screen_buffer[charIndex];
-      bool val = bitRead(character, 6 - rest) == 1;
-
-      if (val) 
-      {
-        graphics_fill_rect(ctx, GRect(x * 4, y * 4, 3, 3), 0, GCornerNone);
+        graphics_fill_rect(ctx, GRect(w * 4, h * 4, 3, 3), 0, GCornerNone);
       }
     }
   }
@@ -294,6 +370,10 @@ static void main_window_load(Window *window) {
   // Add to window  
   layer_add_child(window_layer, s_screen_layer);
 
+  // Sub to ticks
+  milli_tick_handler = app_timer_register(STEP_DELAY, milli_tick, NULL);
+  screen_tick_handler = app_timer_register(FPS_DELAY, screen_tick, NULL);
+
   //TODO: handle screen when app starts, show pixelated loading screen? send message that pebble app is open? i guess js know that
 }
 
@@ -317,6 +397,10 @@ static void main_window_unload(Window *window) {
 
   // Destroy screen layer
   layer_destroy(s_screen_layer);
+
+  // Unsubscribe to ticks
+  app_timer_cancel(milli_tick_handler);
+  app_timer_cancel(screen_tick_handler);
 }
 
 static void init() {
@@ -341,10 +425,17 @@ static void init() {
   // Open AppMessage connection
   app_message_register_inbox_received(prv_inbox_received_handler);
   app_message_open(256, 128); 
+
+  // Register HAL
+  tamalib_register_hal(&hal);
+  tamalib_init(g_program, NULL, 1000000);
 }
 
 static void deinit() {
   window_destroy(s_main_window);
+
+  // Release tamalib
+  tamalib_release();
   //TODO handle sending save file + timestamp to phone
 }
 
