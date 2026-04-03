@@ -26,7 +26,13 @@ static const uint8_t LCD_HEIGHT = 16;
 static int8_t s_selectedIcon = -1; // -1 is none, 0-6 says what icon
 static bool s_showingAttentionIcon = true;
 static bool s_js_ready;
-static bool s_lastSaveSendSucceeded = true;
+
+// 0b000 = All buttons are released
+// 0b100 = A button pressed, B and C are released
+// 0b111 = All buttons are pressed.
+// etc..
+static int8_t s_buttonFlags = 0;
+static bool s_lastButtonSendSucceeded = false;
 
 /*
 // Since there's issues with some characters being sent over we are only using characters @(dec:64) to DEL(dec:127).
@@ -37,7 +43,7 @@ static char s_screen_buffer[86]; // 16*32 / 6 ≃ 86 (we use 6 bits, because iss
 */
 static uint8_t s_screen_buffer[74]; // 7 bits - 75 = (16*32)/7
 
-static void SendSaveToPhone(int8_t value) //TODO to implement //TODO TODO TODO
+static void SendButtonEventToPhone(int8_t value)
 {
   if(!s_js_ready)
   {
@@ -52,7 +58,7 @@ static void SendSaveToPhone(int8_t value) //TODO to implement //TODO TODO TODO
   AppMessageResult result = app_message_outbox_begin(&out_iter);
   if(result == APP_MSG_OK) {
     // Construct the message
-     dict_write_int(out_iter, MESSAGE_KEY_Button, &value, sizeof(int8_t), true); //TODO TODO TODO //change key name, change type since this should be the save file only + timestamp?
+     dict_write_int(out_iter, MESSAGE_KEY_Button, &value, sizeof(int8_t), true);
 
     // Send this message
     result = app_message_outbox_send();
@@ -60,45 +66,51 @@ static void SendSaveToPhone(int8_t value) //TODO to implement //TODO TODO TODO
     // Check the result
     if(result != APP_MSG_OK) {
       APP_LOG(APP_LOG_LEVEL_ERROR, "Error sending the outbox: %d", (int)result);
-      s_lastSaveSendSucceeded = false;
+      s_lastButtonSendSucceeded = false;
     }
     else
     {
-      s_lastSaveSendSucceeded = true;
+      s_lastButtonSendSucceeded = true;
     }
   } else {
     // The outbox cannot be used right now
     APP_LOG(APP_LOG_LEVEL_ERROR, "Error preparing the outbox: %d", (int)result);
-    s_lastSaveSendSucceeded = false;
+    s_lastButtonSendSucceeded = false;
   }
 }
 
 // Button presses
 static void on_button_up_press(ClickRecognizerRef recognizer, void *context) //1
 {
-  //TODO
+  s_buttonFlags |= 4; // 0b100
+  SendButtonEventToPhone(s_buttonFlags);
 }
 static void on_button_select_press(ClickRecognizerRef recognizer, void *context) //2
 {
-  //TODO
+  s_buttonFlags |= 2; // 0b010
+  SendButtonEventToPhone(s_buttonFlags);
 }
 static void on_button_down_press(ClickRecognizerRef recognizer, void *context) //3
 {
-  //TODO
+  s_buttonFlags |= 1; // 0b001
+  SendButtonEventToPhone(s_buttonFlags);
 }
 
 // Button releases
 static void on_button_up_release(ClickRecognizerRef recognizer, void *context) //4
 {
-  //TODO
+  s_buttonFlags &= 3; // 0b011
+  SendButtonEventToPhone(s_buttonFlags);
 }
 static void on_button_select_release(ClickRecognizerRef recognizer, void *context) //5
 {
-  //TODO
+  s_buttonFlags &= 5; // 0b101
+  SendButtonEventToPhone(s_buttonFlags);
 }
 static void on_button_down_release(ClickRecognizerRef recognizer, void *context) //6
 {
-  //TODO
+  s_buttonFlags &= 6; // 0b110
+  SendButtonEventToPhone(s_buttonFlags);
 }
 
 static void click_config_provider(void *context) {
@@ -163,6 +175,9 @@ static void icons_update_proc(Layer *layer, GContext *ctx) {
 
 // Handles drawing screen layer
 static void screen_update_proc(Layer *layer, GContext *ctx) { 
+
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "first byte %d second byte %d", s_screen_buffer[0] , s_screen_buffer[1]);
+
   // draw new screen
   graphics_context_set_fill_color(ctx, GColorBlack);
 
@@ -217,8 +232,9 @@ static void screen_update_proc(Layer *layer, GContext *ctx) {
 static void prv_inbox_received_handler(DictionaryIterator *iter, void *context) {  
   APP_LOG(APP_LOG_LEVEL_DEBUG, "inbox received");
 
-  //TODO handle save file incoming
-
+  Tuple *screen_t = dict_find(iter, MESSAGE_KEY_Screen);
+  Tuple *selectedIcon_t = dict_find(iter, MESSAGE_KEY_SelectedIcon);
+  Tuple *showingAttentionIcon_t = dict_find(iter, MESSAGE_KEY_ShowingAttentionIcon);
   Tuple *ready_tuple_t = dict_find(iter, MESSAGE_KEY_JSReady);
 
   if(ready_tuple_t) {
@@ -226,8 +242,8 @@ static void prv_inbox_received_handler(DictionaryIterator *iter, void *context) 
     s_js_ready = true;
   }
 
-  // Handle screen //TODO use same logic for copying over save file?
-  /*if (screen_t)
+  // Handle screen
+  if (screen_t)
   {
     uint8_t *data = screen_t->value->data;
     size_t length = screen_t->length;
@@ -237,16 +253,31 @@ static void prv_inbox_received_handler(DictionaryIterator *iter, void *context) 
     memcpy(s_screen_buffer, data, 74);
     
     layer_mark_dirty(s_screen_layer);
-  }*/
+  }
+
+  // Handle selected icon
+  if (selectedIcon_t)
+  {
+    s_selectedIcon = atoi(selectedIcon_t->value->cstring);
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "selected icon changed %d", s_selectedIcon);
+    layer_mark_dirty(s_icons_layer);
+  }
+
+  // Handle attention icon
+  if (showingAttentionIcon_t)
+  {
+    s_showingAttentionIcon = strcmp(showingAttentionIcon_t->value->cstring, "true") == 0;
+    layer_mark_dirty(s_icons_layer);
+  }
 }
 
-// loop called every second //TODO will thi still work correctly since this gets called when we quit our app?
+// loop called every second
 static void tick_handler(struct tm *tick_time, TimeUnits units_changed) 
 {
   // resend button change if unsuccessful
-  if (!s_lastSaveSendSucceeded)
+  if (!s_lastButtonSendSucceeded)
   {
-    SendSaveToPhone(0); //TODO change this to send actual save file
+    SendButtonEventToPhone(s_buttonFlags);
   }
 }
 
@@ -345,8 +376,8 @@ static void init() {
 
 static void deinit() {
   window_destroy(s_main_window);
-  //TODO handle sending save file + timestamp to phone
 }
+// hello world
 
 int main(void) {
   init();
