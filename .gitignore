@@ -1,2 +1,3 @@
 Tama-Client/build/*
 Tama-Client/.lock-waf_linux_build
+Tama-Client/src/c/rom.h
