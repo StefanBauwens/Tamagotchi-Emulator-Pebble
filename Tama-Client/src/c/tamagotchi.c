@@ -2,7 +2,7 @@
 #define FPS 30
 #define FPS_DELAY 1000/FPS //ms
 #define STEP_DELAY 1 //ms
-#define STEPS_PER_DELAY 30//55  //TODO
+#define STEPS_PER_DELAY 300//55  //TODO
 
 //#undef PBL_COLOR // only used for testing B&W
 
@@ -131,7 +131,7 @@ static hal_t hal = {
 /*   END HAL T FUNCTIONS   */
 /***************************/
 
-static void milli_tick() //runs once every ms.
+static void milli_tick() //runs once every ms. //TODO can run better I think. Check how I did it with pebble client
 {
   for (size_t i = 0; i < STEPS_PER_DELAY; i++) //TODO figure out how much to get an exact value
   {
@@ -377,7 +377,7 @@ static void main_window_load(Window *window) {
   //TODO: handle screen when app starts, show pixelated loading screen? send message that pebble app is open? i guess js know that
 }
 
-static void main_window_unload(Window *window) {
+static void main_window_unload(Window *window) { //TODO save state when exiting
   // Destroy backrgound bitmap and its layer
   gbitmap_destroy(s_bitmap_bg);
   bitmap_layer_destroy(s_background_layer);
