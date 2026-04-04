@@ -283,8 +283,16 @@ void cpu_set_state(const flat_state_t *state) //TODO test
 
     memcpy(memory, state->memory, sizeof(memory));
 	memcpy(interrupts, state->interrupts, sizeof(interrupts));	
-	interrupt_t temp = {0x0, 0x0, 0, 0x06}; // TODO Reset input //TODO not sure this works
-	interrupts[3] = temp; //TODO test
+
+	hw_set_button(BTN_LEFT, BTN_STATE_RELEASED);
+	hw_set_button(BTN_MIDDLE, BTN_STATE_RELEASED);
+	hw_set_button(BTN_RIGHT, BTN_STATE_RELEASED);
+	//interrupt_t temp = {0x0, 0x0, 0, 0x06}; // TODO Reset input //TODO not sure this works
+	//interrupts[3] = temp; //TODO test
+
+	//TODO test
+	//SET_IO_MEMORY(memory, REG_K40_K43_BZ_OUTPUT_PORT, 0xF); // Output port (R40-R43)
+	//SET_IO_MEMORY(memory, REG_LCD_CTRL, 0x8); // LCD control
 }
 
 u32_t cpu_get_depth(void)
