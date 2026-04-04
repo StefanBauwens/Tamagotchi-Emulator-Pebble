@@ -134,7 +134,7 @@ static u8_t sp;
 static u4_t flags;
 
 static const u12_t *g_program = NULL;
-static MEM_BUFFER_TYPE memory[MEM_BUFFER_SIZE]; //TODO save this
+static MEM_BUFFER_TYPE memory[MEM_BUFFER_SIZE];
 
 static input_port_t inputs[INPUT_PORT_NUM] = {{0}};
 
@@ -261,9 +261,9 @@ flat_state_t cpu_get_flat_state(void)
 	return saveState;
 }
 
-void cpu_set_state(const flat_state_t *state) //TODO test
+void cpu_set_state(const flat_state_t *state)
 {
-    pc = state->pc; //TODO set values directly, do not set cpu_STATE
+    pc = state->pc;
     x = state->x;
     y = state->y;
     a = state->a;
@@ -284,15 +284,10 @@ void cpu_set_state(const flat_state_t *state) //TODO test
     memcpy(memory, state->memory, sizeof(memory));
 	memcpy(interrupts, state->interrupts, sizeof(interrupts));	
 
+	// helps button reset properly after loading state
 	hw_set_button(BTN_LEFT, BTN_STATE_RELEASED);
 	hw_set_button(BTN_MIDDLE, BTN_STATE_RELEASED);
 	hw_set_button(BTN_RIGHT, BTN_STATE_RELEASED);
-	//interrupt_t temp = {0x0, 0x0, 0, 0x06}; // TODO Reset input //TODO not sure this works
-	//interrupts[3] = temp; //TODO test
-
-	//TODO test
-	//SET_IO_MEMORY(memory, REG_K40_K43_BZ_OUTPUT_PORT, 0xF); // Output port (R40-R43)
-	//SET_IO_MEMORY(memory, REG_LCD_CTRL, 0x8); // LCD control
 }
 
 u32_t cpu_get_depth(void)

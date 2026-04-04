@@ -2,7 +2,7 @@
 #define FPS 30
 #define FPS_DELAY 1000/FPS //ms
 #define STEP_DELAY 1 //ms
-#define STEPS_PER_DELAY 300//55  //TODO
+#define STEPS_PER_DELAY 600//55  //TODO
 
 //#undef PBL_COLOR // only used for testing B&W
 
