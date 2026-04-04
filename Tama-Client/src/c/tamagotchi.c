@@ -34,12 +34,14 @@ static bool s_showingAttentionIcon = true;
 static bool s_js_ready;
 static bool s_lastSaveSendSucceeded = true;
 static bool s_pixelsChanged = false;
+static uint32_t s_saveStateKey = 32; 
 
 static bool_t s_screen_buffer[LCD_HEIGHT][LCD_WIDTH] = {{0}};
 
 //ticks
 static AppTimer *milli_tick_handler;
 static AppTimer *screen_tick_handler;
+static AppTimer *delayed_input_handler;
 
 /*****************************/
 /*   START HAL T FUNCTIONS   */
@@ -146,7 +148,6 @@ static void screen_tick() //runs every 33 ms for about 30fps
   screen_tick_handler = app_timer_register(FPS_DELAY, screen_tick, NULL);
 }
 
-
 static void SendSaveToPhone(int8_t value) //TODO to implement //TODO TODO TODO
 {
   if(!s_js_ready)
@@ -218,6 +219,12 @@ static void click_config_provider(void *context) {
   window_raw_click_subscribe(BUTTON_ID_DOWN, on_button_down_press, on_button_down_release, NULL);
 }
 
+static void delayed_input() // makes input not work immediately
+{
+  // Listen for button events
+  window_set_click_config_provider(s_main_window, click_config_provider);
+}
+
 // Handles drawing icons layers
 static void icons_update_proc(Layer *layer, GContext *ctx) {
   // Set the draw color
@@ -287,7 +294,7 @@ static void screen_update_proc(Layer *layer, GContext *ctx) {
       }
     }
   }
-  APP_LOG(APP_LOG_LEVEL_DEBUG, "done drawing...");
+  //APP_LOG(APP_LOG_LEVEL_DEBUG, "done drawing...");
 }
 
 static void prv_inbox_received_handler(DictionaryIterator *iter, void *context) {  
@@ -373,6 +380,7 @@ static void main_window_load(Window *window) {
   // Sub to ticks
   milli_tick_handler = app_timer_register(STEP_DELAY, milli_tick, NULL);
   screen_tick_handler = app_timer_register(FPS_DELAY, screen_tick, NULL);
+  delayed_input_handler = app_timer_register(3000, delayed_input, NULL);
 
   //TODO: handle screen when app starts, show pixelated loading screen? send message that pebble app is open? i guess js know that
 }
@@ -401,6 +409,7 @@ static void main_window_unload(Window *window) { //TODO save state when exiting
   // Unsubscribe to ticks
   app_timer_cancel(milli_tick_handler);
   app_timer_cancel(screen_tick_handler);
+  app_timer_cancel(delayed_input_handler);
 }
 
 static void init() {
@@ -412,9 +421,6 @@ static void init() {
     .load = main_window_load,
     .unload = main_window_unload
   });
-
-  // Listen for button events
-  window_set_click_config_provider(s_main_window, click_config_provider);
 
   // Listen for seconds
   tick_timer_service_subscribe(SECOND_UNIT, tick_handler);
@@ -428,15 +434,40 @@ static void init() {
 
   // Register HAL
   tamalib_register_hal(&hal);
-  tamalib_init(g_program, NULL, 1000000);
+
+  // Initialization tamalib
+
+  //persist_delete(s_saveStateKey); //TODO temp
+  // Check for save file
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "Checking for save file");
+  if (persist_exists(s_saveStateKey)) {
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "Save state found.Loading...");
+    // Read persisted value
+
+    // create instance
+    flat_state_t saveState = {0}; 
+    persist_read_data(s_saveStateKey, &saveState, sizeof(flat_state_t));
+    //cpu_set_state(&saveState);
+    cpu_init_from_state(g_program, &saveState, NULL, 1000000);
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "Save state loaded!");
+  }
+  else
+  {
+    tamalib_init(g_program, NULL, 1000000);
+  }
 }
 
 static void deinit() {
   window_destroy(s_main_window);
 
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "Saving state file to persistant storage...");
+  //TODO handle sending save file + timestamp to phone
+  flat_state_t saveState = cpu_get_flat_state();
+  persist_write_data(s_saveStateKey, &saveState, sizeof(flat_state_t));
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "Done saving... %d", saveState.pc);
+
   // Release tamalib
   tamalib_release();
-  //TODO handle sending save file + timestamp to phone
 }
 
 int main(void) {

@@ -166,6 +166,28 @@ typedef struct {
 	MEM_BUFFER_TYPE *memory;
 } state_t;
 
+typedef struct {
+	u13_t pc;
+	u12_t x;
+	u12_t y;
+	u4_t a;
+	u4_t b;
+	u5_t np;
+	u8_t sp;
+	u4_t flags;
+
+	u32_t tick_counter;
+	u32_t clk_timer_timestamp;
+	u32_t prog_timer_timestamp;
+	bool_t prog_timer_enabled;
+	u8_t prog_timer_data;
+	u8_t prog_timer_rld;
+
+	u32_t call_depth;
+
+    interrupt_t interrupts[INT_SLOT_NUM];
+	MEM_BUFFER_TYPE memory[MEM_BUFFER_SIZE];
+} flat_state_t;
 
 void cpu_add_bp(breakpoint_t **list, u13_t addr);
 void cpu_free_bp(breakpoint_t **list);
@@ -173,6 +195,10 @@ void cpu_free_bp(breakpoint_t **list);
 void cpu_set_speed(u8_t speed);
 
 state_t * cpu_get_state(void);
+
+flat_state_t cpu_get_flat_state(void);
+
+void cpu_set_state(const flat_state_t *state);
 
 u32_t cpu_get_depth(void);
 
@@ -185,6 +211,8 @@ void cpu_refresh_hw(void);
 void cpu_reset(void);
 
 bool_t cpu_init(const u12_t *program, breakpoint_t *breakpoints, u32_t freq);
+bool_t cpu_init_from_state(const u12_t *program, const flat_state_t *state, breakpoint_t *breakpoints, u32_t freq);
+
 void cpu_release(void);
 
 int cpu_step(void);

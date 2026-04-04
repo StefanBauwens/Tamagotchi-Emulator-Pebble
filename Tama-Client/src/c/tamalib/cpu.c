@@ -20,6 +20,7 @@
 #include "cpu.h"
 #include "hw.h"
 #include "hal.h"
+#include <string.h>
 
 #define TICK_FREQUENCY				32768 // Hz
 
@@ -133,7 +134,7 @@ static u8_t sp;
 static u4_t flags;
 
 static const u12_t *g_program = NULL;
-static MEM_BUFFER_TYPE memory[MEM_BUFFER_SIZE];
+static MEM_BUFFER_TYPE memory[MEM_BUFFER_SIZE]; //TODO save this
 
 static input_port_t inputs[INPUT_PORT_NUM] = {{0}};
 
@@ -230,6 +231,60 @@ void cpu_set_speed(u8_t speed)
 state_t * cpu_get_state(void)
 {
 	return &cpu_state;
+}
+
+flat_state_t cpu_get_flat_state(void)
+{
+	flat_state_t saveState = {0};
+
+	saveState.pc = *cpu_state.pc;
+	saveState.x = *cpu_state.x;
+	saveState.y = *cpu_state.y;
+	saveState.a = *cpu_state.a;
+	saveState.b = *cpu_state.b;
+	saveState.np = *cpu_state.np;
+	saveState.sp = *cpu_state.sp;
+	saveState.flags = *cpu_state.flags;
+
+	saveState.tick_counter = *cpu_state.tick_counter;
+	saveState.clk_timer_timestamp = *cpu_state.clk_timer_timestamp;
+	saveState.prog_timer_timestamp = *cpu_state.prog_timer_timestamp;
+	saveState.prog_timer_enabled = *cpu_state.prog_timer_enabled;
+	saveState.prog_timer_data = *cpu_state.prog_timer_data;
+	saveState.prog_timer_rld = *cpu_state.prog_timer_rld;
+
+	saveState.call_depth = *cpu_state.call_depth;
+
+	memcpy(saveState.memory, memory, sizeof(memory));
+	memcpy(saveState.interrupts, interrupts, sizeof(interrupts));
+
+	return saveState;
+}
+
+void cpu_set_state(const flat_state_t *state) //TODO test
+{
+    pc = state->pc; //TODO set values directly, do not set cpu_STATE
+    x = state->x;
+    y = state->y;
+    a = state->a;
+    b = state->b;
+    np = state->np;
+    sp = state->sp;
+    flags = state->flags;
+
+    tick_counter = state->tick_counter;
+    clk_timer_timestamp = state->clk_timer_timestamp;
+    prog_timer_timestamp = state->prog_timer_timestamp;
+    prog_timer_enabled = state->prog_timer_enabled;
+    prog_timer_data = state->prog_timer_data;
+    prog_timer_rld = state->prog_timer_rld;
+
+    call_depth = state->call_depth;
+
+    memcpy(memory, state->memory, sizeof(memory));
+	memcpy(interrupts, state->interrupts, sizeof(interrupts));	
+	interrupt_t temp = {0x0, 0x0, 0, 0x06}; // TODO Reset input //TODO not sure this works
+	interrupts[3] = temp; //TODO test
 }
 
 u32_t cpu_get_depth(void)
@@ -1693,6 +1748,19 @@ bool_t cpu_init(const u12_t *program, breakpoint_t *breakpoints, u32_t freq)
 
 	return 0;
 }
+
+bool_t cpu_init_from_state(const u12_t *program, const flat_state_t *state, breakpoint_t *breakpoints, u32_t freq)
+{
+	g_program = program;
+	g_breakpoints = breakpoints;
+	ts_freq = freq;
+
+	cpu_set_state(state);
+	cpu_sync_ref_timestamp();
+
+	return 0;
+}
+
 
 void cpu_release(void)
 {
