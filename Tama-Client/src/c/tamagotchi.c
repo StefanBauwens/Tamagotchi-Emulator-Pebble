@@ -8,7 +8,9 @@
 
 #include <pebble.h>
 #include "tamalib/tamalib.h"
-#include "rom.h" //TODO temp
+//#include "rom.h" //TODO temp
+
+static void initTamalib(void); 
 
 static Window *s_main_window;
 static BitmapLayer *s_background_layer;
@@ -37,7 +39,8 @@ static bool s_pixelsChanged = false;
 static uint32_t s_saveStateKey = 32; 
 
 static bool_t s_screen_buffer[LCD_HEIGHT][LCD_WIDTH] = {{0}};
-static u12_t g_program2[6144] = {0};
+static u12_t g_program[6144] = {0};
+static bool s_hasReceivedRom = false;
 
 //ticks
 static AppTimer *milli_tick_handler;
@@ -135,16 +138,22 @@ static hal_t hal = {
 
 static void milli_tick() //runs once every ms. //TODO can run better I think. Check how I did it with pebble client
 {
-  for (size_t i = 0; i < STEPS_PER_DELAY; i++) //TODO figure out how much to get an exact value
+  if (s_hasReceivedRom)
   {
-      tamalib_step();
-  }  
+    for (size_t i = 0; i < STEPS_PER_DELAY; i++) //TODO figure out how much to get an exact value
+    {
+        tamalib_step();
+    } 
+  } 
   milli_tick_handler = app_timer_register(STEP_DELAY, milli_tick, NULL); //calls itself in 1ms
 }
 
 static void screen_tick() //runs every 33 ms for about 30fps
 {
-  hal_update_screen();
+  if (s_hasReceivedRom)
+  {
+    hal_update_screen();
+  }
   screen_tick_handler = app_timer_register(FPS_DELAY, screen_tick, NULL);
 }
 
@@ -187,28 +196,34 @@ static void SendSaveToPhone(int8_t value) //TODO to implement //TODO TODO TODO
 // Button presses
 static void on_button_up_press(ClickRecognizerRef recognizer, void *context) //1
 {
+  if (!s_hasReceivedRom) return;
   tamalib_set_button(BTN_LEFT, BTN_STATE_PRESSED);
 }
 static void on_button_select_press(ClickRecognizerRef recognizer, void *context) //2
 {
+  if (!s_hasReceivedRom) return;
   tamalib_set_button(BTN_MIDDLE, BTN_STATE_PRESSED);
 }
 static void on_button_down_press(ClickRecognizerRef recognizer, void *context) //3
 {
+  if (!s_hasReceivedRom) return;
   tamalib_set_button(BTN_RIGHT, BTN_STATE_PRESSED);
 }
 
 // Button releases
 static void on_button_up_release(ClickRecognizerRef recognizer, void *context) //4
 {
+  if (!s_hasReceivedRom) return;
   tamalib_set_button(BTN_LEFT, BTN_STATE_RELEASED);
 }
 static void on_button_select_release(ClickRecognizerRef recognizer, void *context) //5
 {
+  if (!s_hasReceivedRom) return;
   tamalib_set_button(BTN_MIDDLE, BTN_STATE_RELEASED);
 }
 static void on_button_down_release(ClickRecognizerRef recognizer, void *context) //6
 {
+  if (!s_hasReceivedRom) return;
   tamalib_set_button(BTN_RIGHT, BTN_STATE_RELEASED);
 }
 
@@ -323,12 +338,14 @@ static void prv_inbox_received_handler(DictionaryIterator *iter, void *context) 
 
         u12_t value = chunk[i] | (chunk[i + 1] << 8);
 
-        g_program2[index] = value & 0x0FFF; // ensure 12-bit
+        g_program[index] = value & 0x0FFF; // ensure 12-bit
     }
     if (index == 6143)
     {
       // we reached the end and can safely start now
       APP_LOG(APP_LOG_LEVEL_DEBUG, "Reached end of ROM!");
+      s_hasReceivedRom = true;
+      initTamalib();
     }
   }
 
@@ -433,6 +450,30 @@ static void main_window_unload(Window *window) { //TODO save state when exiting
   app_timer_cancel(screen_tick_handler);
 }
 
+static void initTamalib() {
+  // Register HAL
+  tamalib_register_hal(&hal);
+
+  //persist_delete(s_saveStateKey); //TODO temp
+  // Check for save file
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "Checking for save file");
+  if (persist_exists(s_saveStateKey)) {
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "Save state found.Loading...");
+    // Read persisted value
+
+    // create instance
+    flat_state_t saveState = {0}; 
+    persist_read_data(s_saveStateKey, &saveState, sizeof(flat_state_t));
+    //cpu_set_state(&saveState);
+    cpu_init_from_state(g_program, &saveState, NULL, 1000000);
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "Save state loaded!");
+  }
+  else
+  {
+    tamalib_init(g_program, NULL, 1000000);
+  }
+}
+
 static void init() {
   // Create main Window element and assign to pointer
   s_main_window = window_create();
@@ -453,30 +494,6 @@ static void init() {
   app_message_register_inbox_received(prv_inbox_received_handler);
   //app_message_open(256, 128); 
   app_message_open(2048, 2048);
-
-  // Register HAL
-  tamalib_register_hal(&hal);
-
-  // Initialization tamalib
-
-  //persist_delete(s_saveStateKey); //TODO temp
-  // Check for save file
-  APP_LOG(APP_LOG_LEVEL_DEBUG, "Checking for save file");
-  if (persist_exists(s_saveStateKey)) {
-    APP_LOG(APP_LOG_LEVEL_DEBUG, "Save state found.Loading...");
-    // Read persisted value
-
-    // create instance
-    flat_state_t saveState = {0}; 
-    persist_read_data(s_saveStateKey, &saveState, sizeof(flat_state_t));
-    //cpu_set_state(&saveState);
-    cpu_init_from_state(g_program, &saveState, NULL, 1000000);
-    APP_LOG(APP_LOG_LEVEL_DEBUG, "Save state loaded!");
-  }
-  else
-  {
-    tamalib_init(g_program, NULL, 1000000);
-  }
 
   // Listen for button events
   window_set_click_config_provider(s_main_window, click_config_provider);
