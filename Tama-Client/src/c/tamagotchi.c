@@ -8,7 +8,7 @@
 
 #include <pebble.h>
 #include "tamalib/tamalib.h"
-#include "rom.h"
+#include "rom.h" //TODO temp
 
 static Window *s_main_window;
 static BitmapLayer *s_background_layer;
@@ -37,6 +37,7 @@ static bool s_pixelsChanged = false;
 static uint32_t s_saveStateKey = 32; 
 
 static bool_t s_screen_buffer[LCD_HEIGHT][LCD_WIDTH] = {{0}};
+static u12_t g_program2[6144] = {0};
 
 //ticks
 static AppTimer *milli_tick_handler;
@@ -300,6 +301,35 @@ static void prv_inbox_received_handler(DictionaryIterator *iter, void *context) 
   if(ready_tuple_t) {
     // PebbleKit JS is ready! Safe to send messages
     s_js_ready = true;
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "js ready received");
+  }
+
+  // handle incoming rom
+  
+  Tuple *offset_t = dict_find(iter, MESSAGE_KEY_ROMOffset);
+  Tuple *chunk_t = dict_find(iter, MESSAGE_KEY_ROMChunk);
+
+  if(offset_t && chunk_t) {
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "chunk received");
+    int offset = offset_t->value->int16;
+    uint8_t *chunk = chunk_t->value->data;
+    int index = 0;
+
+    // Convert bytes → u12_t values
+    for (int i = 0; i < chunk_t->length; i += 2) {
+        index = (offset + i) / 2;
+
+        if (index >= 6144) break; // safety
+
+        u12_t value = chunk[i] | (chunk[i + 1] << 8);
+
+        g_program2[index] = value & 0x0FFF; // ensure 12-bit
+    }
+    if (index == 6143)
+    {
+      // we reached the end and can safely start now
+      APP_LOG(APP_LOG_LEVEL_DEBUG, "Reached end of ROM!");
+    }
   }
 
   // Handle screen //TODO use same logic for copying over save file?

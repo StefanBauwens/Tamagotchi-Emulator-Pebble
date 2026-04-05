@@ -13,7 +13,9 @@
             "SelectedIcon",
             "ShowingAttentionIcon",
             "Button",
-            "JSReady"
+            "JSReady",
+            "ROMOffset",
+            "ROMChunk"
         ],
         "projectType": "native",
         "resources": {
