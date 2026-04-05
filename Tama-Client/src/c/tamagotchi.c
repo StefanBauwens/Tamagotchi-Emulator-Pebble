@@ -42,6 +42,7 @@ static uint32_t s_saveStateKey = 32;
 static bool_t s_screen_buffer[LCD_HEIGHT][LCD_WIDTH] = {{0}};
 static u12_t g_program[6144] = {0};
 static bool s_hasReceivedRom = false;
+static bool s_clearTextLayerOnScreenRefresh = false;
 
 //ticks
 static AppTimer *milli_tick_handler;
@@ -154,6 +155,11 @@ static void screen_tick() //runs every 33 ms for about 30fps
   if (s_hasReceivedRom)
   {
     hal_update_screen();
+  }
+
+  if (s_clearTextLayerOnScreenRefresh)
+  {
+    text_layer_set_text(s_text_layer, " ");
   }
   screen_tick_handler = app_timer_register(FPS_DELAY, screen_tick, NULL);
 }
@@ -342,8 +348,8 @@ static void prv_inbox_received_handler(DictionaryIterator *iter, void *context) 
         g_program[index] = value & 0x0FFF; // ensure 12-bit
 
         static char progress_text[25];
-        int percentage = (offset/12288)*100; //TODO check
-        snprintf(progress_text, sizeof(progress_text), "Loading Rom: %d%%", percentage);
+        int percentage = (offset * 100)/12288; //TODO check
+        snprintf(progress_text, sizeof(progress_text), "Loading ROM %d%%", percentage);
         text_layer_set_text(s_text_layer, progress_text);
     }
     if (index == 6143)
@@ -352,6 +358,7 @@ static void prv_inbox_received_handler(DictionaryIterator *iter, void *context) 
       text_layer_set_text(s_text_layer, "Loading ROM 100%");
       APP_LOG(APP_LOG_LEVEL_DEBUG, "Reached end of ROM!");
       s_hasReceivedRom = true;
+      s_clearTextLayerOnScreenRefresh = true;
       initTamalib();
     }
   }
@@ -426,6 +433,7 @@ static void main_window_load(Window *window) {
 
   // Create text layer
   s_text_layer = text_layer_create(GRect(0, 60, bounds.size.w, 50));
+  text_layer_set_background_color(s_text_layer, GColorClear);
   text_layer_set_text(s_text_layer, "Loading ROM 0%");
   text_layer_set_text_alignment(s_text_layer, GTextAlignmentCenter);
   text_layer_set_overflow_mode(s_text_layer, GTextOverflowModeWordWrap);
