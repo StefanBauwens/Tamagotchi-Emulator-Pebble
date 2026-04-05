@@ -6,6 +6,7 @@ var runningXHRRequests = 0;
 var lastButtonState = "0";
 
 const TIMEOUT_MS = 1000;
+const ROM_KEY = "ROM";
 
 var xhrRequest = function (url, type, callback) {
     var xhr = new XMLHttpRequest();
@@ -18,28 +19,49 @@ var xhrRequest = function (url, type, callback) {
 
 function FetchROM()
 {
-    console.log("Fetching ROM"); //TODO error handling
-    xhrRequest('https://pastebin.com/raw/iN0pfyr7', 'GET', SendROM); //TODO let user input this rom
-}
-
-function SendROM(ROMText) {
-    //console.log("ROM we received: " + ROMText);
-    let stringArray = ROMText.split(", ");
-    let values = stringArray.map(s => parseInt(s, 16)); // convert to integers
-
-    let buffer = new Uint8Array(values.length * 2); // use 2 bytes for each value
-    for (let i = 0; i < values.length; i++) {
-        buffer[i * 2]     = values[i] & 0xFF;
-        buffer[i * 2 + 1] = (values[i] >> 8) & 0xFF;
+    console.log("Fetching ROM..."); //TODO error handling timeout
+    if (localStorage.getItem(ROM_KEY) === null)
+    {
+        console.log("Does not yet exist in local storage so fetching...");
+        xhrRequest('https://pastebin.com/raw/iN0pfyr7', 'GET', OnReceiveRomText); //TODO let user input this rom
+    }
+    else
+    {
+        console.log("Has ROM stored in local storage");
+        let arr = JSON.parse(localStorage.getItem(ROM_KEY));
+        let buffer = new Uint8Array(arr);
+        SendROM(buffer);
     }
 
+    function OnReceiveRomText(ROMText)
+    {
+        console.log("Received ROM text and parsing to array...");
+
+        let stringArray = ROMText.split(", ");
+        let values = stringArray.map(s => parseInt(s, 16)); // convert to integers
+
+        let buffer = new Uint8Array(values.length * 2); // use 2 bytes for each value
+        for (let i = 0; i < values.length; i++) {
+            buffer[i * 2]     = values[i] & 0xFF;
+            buffer[i * 2 + 1] = (values[i] >> 8) & 0xFF;
+        }
+
+        localStorage.setItem(ROM_KEY, JSON.stringify(Array.from(buffer)));
+        console.log("Saved to localstorage");
+
+        SendROM(buffer);
+    }
+}
+
+function SendROM(buffer) {
+    console.log("Trying to send ROM...");
+
     // send chunked to watch
-    const CHUNK_SIZE = 128; //TODO test
+    const CHUNK_SIZE = 2048; //TODO test
     let offset = 0;
     sendNextChunk(buffer);
 
     function sendNextChunk(data) {
-        console.log("Trying to send ROM...");
         if (offset >= data.length) 
         {
             console.log("Finished sending ROM!");
@@ -73,9 +95,9 @@ Pebble.addEventListener('ready',
         // Update s_js_ready on watch
         Pebble.sendAppMessage({'JSReady': 1});
 
-        //setInterval(SendScreen, 500);
-        //SendScreen();
-        setTimeout(FetchROM, 3000); //TODO test
+        //localStorage.clear(); //TODO temp
+        //setTimeout(FetchROM, 3000); //TODO test
+        FetchROM();
     }   
 );
 

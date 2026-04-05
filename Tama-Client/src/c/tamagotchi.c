@@ -451,7 +451,8 @@ static void init() {
 
   // Open AppMessage connection
   app_message_register_inbox_received(prv_inbox_received_handler);
-  app_message_open(256, 128); 
+  //app_message_open(256, 128); 
+  app_message_open(2048, 2048);
 
   // Register HAL
   tamalib_register_hal(&hal);
