@@ -16,6 +16,7 @@ static Window *s_main_window;
 static BitmapLayer *s_background_layer;
 static Layer *s_screen_layer;
 static Layer *s_icons_layer;
+static TextLayer *s_text_layer;
 
 // Bitmaps
 static GBitmap *s_bitmap_bg;
@@ -339,10 +340,16 @@ static void prv_inbox_received_handler(DictionaryIterator *iter, void *context) 
         u12_t value = chunk[i] | (chunk[i + 1] << 8);
 
         g_program[index] = value & 0x0FFF; // ensure 12-bit
+
+        static char progress_text[25];
+        int percentage = (offset/12288)*100; //TODO check
+        snprintf(progress_text, sizeof(progress_text), "Loading Rom: %d%%", percentage);
+        text_layer_set_text(s_text_layer, progress_text);
     }
     if (index == 6143)
     {
       // we reached the end and can safely start now
+      text_layer_set_text(s_text_layer, "Loading ROM 100%");
       APP_LOG(APP_LOG_LEVEL_DEBUG, "Reached end of ROM!");
       s_hasReceivedRom = true;
       initTamalib();
@@ -417,6 +424,13 @@ static void main_window_load(Window *window) {
   // Add to window  
   layer_add_child(window_layer, s_screen_layer);
 
+  // Create text layer
+  s_text_layer = text_layer_create(GRect(0, 60, bounds.size.w, 50));
+  text_layer_set_text(s_text_layer, "Loading ROM 0%");
+  text_layer_set_text_alignment(s_text_layer, GTextAlignmentCenter);
+  text_layer_set_overflow_mode(s_text_layer, GTextOverflowModeWordWrap);
+  layer_add_child(window_layer, text_layer_get_layer(s_text_layer));
+
   // Sub to ticks
   milli_tick_handler = app_timer_register(STEP_DELAY, milli_tick, NULL);
   screen_tick_handler = app_timer_register(FPS_DELAY, screen_tick, NULL);
@@ -428,6 +442,9 @@ static void main_window_unload(Window *window) { //TODO save state when exiting
   // Destroy backrgound bitmap and its layer
   gbitmap_destroy(s_bitmap_bg);
   bitmap_layer_destroy(s_background_layer);
+
+  // Destroy text layer
+  text_layer_destroy(s_text_layer);
 
   // Destroy icon bitmaps
   gbitmap_destroy(s_bitmap_icon1);
