@@ -35,7 +35,6 @@ static GBitmap *s_bitmap_icon8;
 static int8_t s_selectedIcon = -1; // -1 is none, 0-6 says what icon
 static bool s_showingAttentionIcon = true;
 static bool s_js_ready;
-static bool s_lastSaveSendSucceeded = true;
 static bool s_pixelsChanged = false;
 static uint32_t s_saveStateKey = 32; 
 
@@ -164,42 +163,6 @@ static void screen_tick() //runs every 33 ms for about 30fps
   screen_tick_handler = app_timer_register(FPS_DELAY, screen_tick, NULL);
 }
 
-static void SendSaveToPhone(int8_t value) //TODO to implement //TODO TODO TODO
-{
-  if(!s_js_ready)
-  {
-    APP_LOG(APP_LOG_LEVEL_WARNING, "JS is not yet ready to receive messages!");
-    return;
-  }
-
-  // Declare the dictionary's iterator
-  DictionaryIterator *out_iter;
-
-  // Prepare the outbox buffer for this message
-  AppMessageResult result = app_message_outbox_begin(&out_iter);
-  if(result == APP_MSG_OK) {
-    // Construct the message
-     dict_write_int(out_iter, MESSAGE_KEY_Button, &value, sizeof(int8_t), true); //TODO TODO TODO //change key name, change type since this should be the save file only + timestamp?
-
-    // Send this message
-    result = app_message_outbox_send();
-
-    // Check the result
-    if(result != APP_MSG_OK) {
-      APP_LOG(APP_LOG_LEVEL_ERROR, "Error sending the outbox: %d", (int)result);
-      s_lastSaveSendSucceeded = false;
-    }
-    else
-    {
-      s_lastSaveSendSucceeded = true;
-    }
-  } else {
-    // The outbox cannot be used right now
-    APP_LOG(APP_LOG_LEVEL_ERROR, "Error preparing the outbox: %d", (int)result);
-    s_lastSaveSendSucceeded = false;
-  }
-}
-
 // Button presses
 static void on_button_up_press(ClickRecognizerRef recognizer, void *context) //1
 {
@@ -310,7 +273,6 @@ static void screen_update_proc(Layer *layer, GContext *ctx) {
       }
     }
   }
-  //APP_LOG(APP_LOG_LEVEL_DEBUG, "done drawing...");
 }
 
 static void prv_inbox_received_handler(DictionaryIterator *iter, void *context) {  
@@ -327,7 +289,6 @@ static void prv_inbox_received_handler(DictionaryIterator *iter, void *context) 
   }
 
   // handle incoming rom
-  
   Tuple *offset_t = dict_find(iter, MESSAGE_KEY_ROMOffset);
   Tuple *chunk_t = dict_find(iter, MESSAGE_KEY_ROMChunk);
 
@@ -361,29 +322,6 @@ static void prv_inbox_received_handler(DictionaryIterator *iter, void *context) 
       s_clearTextLayerOnScreenRefresh = true;
       initTamalib();
     }
-  }
-
-  // Handle screen //TODO use same logic for copying over save file?
-  /*if (screen_t)
-  {
-    uint8_t *data = screen_t->value->data;
-    size_t length = screen_t->length;
-    
-    //APP_LOG(APP_LOG_LEVEL_DEBUG, "screen data: %s", data);
-    APP_LOG(APP_LOG_LEVEL_DEBUG, "screen length: %d", (int)length);
-    memcpy(s_screen_buffer, data, 74);
-    
-    layer_mark_dirty(s_screen_layer);
-  }*/
-}
-
-// loop called every second //TODO will thi still work correctly since this gets called when we quit our app?
-static void tick_handler(struct tm *tick_time, TimeUnits units_changed) 
-{
-  // resend button change if unsuccessful
-  if (!s_lastSaveSendSucceeded)
-  {
-    SendSaveToPhone(0); //TODO change this to send actual save file
   }
 }
 
@@ -510,7 +448,7 @@ static void init() {
   });
 
   // Listen for seconds
-  tick_timer_service_subscribe(SECOND_UNIT, tick_handler);
+  //tick_timer_service_subscribe(SECOND_UNIT, tick_handler);
 
   // Show the Window on the watch, with animated=true
   window_stack_push(s_main_window, true);
@@ -524,14 +462,84 @@ static void init() {
   window_set_click_config_provider(s_main_window, click_config_provider);
 }
 
+static void saveCurrentState()
+{
+  if (!s_hasReceivedRom) return; // no point in sending save if we don't even have the rom yet.
+
+  // save to persistant storage as backup
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "Saving state file to persistant storage...");
+  flat_state_t saveState = cpu_get_flat_state();
+  persist_write_data(s_saveStateKey, &saveState, sizeof(flat_state_t));
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "Done saving. Sending to phone...");
+
+  //TODO handle sending save file + timestamp to phone
+  // send to phone? Is this possible since it's async and stuff?
+  if(!s_js_ready)
+  {
+    APP_LOG(APP_LOG_LEVEL_WARNING, "JS is not yet ready to receive messages!"); // warn user!
+    return;
+  }
+
+  // Declare the dictionary's iterator
+  DictionaryIterator *out_iter;
+
+  // Prepare the outbox buffer for this message
+  AppMessageResult result = app_message_outbox_begin(&out_iter);
+  if(result == APP_MSG_OK) {
+    // Construct the message
+    dict_write_int(out_iter, MESSAGE_KEY_STATEpc, &saveState.pc, sizeof(uint16_t), false);
+    dict_write_int(out_iter, MESSAGE_KEY_STATEx, &saveState.x, sizeof(uint16_t), false);
+    dict_write_int(out_iter, MESSAGE_KEY_STATEy, &saveState.y, sizeof(uint16_t), false);
+    dict_write_int(out_iter, MESSAGE_KEY_STATEa, &saveState.a, sizeof(uint8_t), false);
+    dict_write_int(out_iter, MESSAGE_KEY_STATEb, &saveState.b, sizeof(uint8_t), false);
+    dict_write_int(out_iter, MESSAGE_KEY_STATEnp, &saveState.np, sizeof(uint8_t), false);
+    dict_write_int(out_iter, MESSAGE_KEY_STATEsp, &saveState.sp, sizeof(uint8_t), false);
+    dict_write_int(out_iter, MESSAGE_KEY_STATEflags, &saveState.flags, sizeof(uint8_t), false);
+    
+    dict_write_int(out_iter, MESSAGE_KEY_STATEtick_counter, &saveState.tick_counter, sizeof(uint32_t), false);
+    dict_write_int(out_iter, MESSAGE_KEY_STATEclk_timer_timestamp, &saveState.clk_timer_timestamp, sizeof(uint32_t), false);
+    dict_write_int(out_iter, MESSAGE_KEY_STATEprog_timer_timestamp, &saveState.prog_timer_timestamp, sizeof(uint32_t), false);
+    dict_write_int(out_iter, MESSAGE_KEY_STATEprog_timer_enabled, &saveState.prog_timer_enabled, sizeof(uint8_t), false);
+    dict_write_int(out_iter, MESSAGE_KEY_STATEprog_timer_data, &saveState.prog_timer_data, sizeof(uint8_t), false);
+    dict_write_int(out_iter, MESSAGE_KEY_STATEprog_timer_rld, &saveState.prog_timer_rld, sizeof(uint8_t), false);
+    dict_write_int(out_iter, MESSAGE_KEY_STATEcall_depth, &saveState.call_depth, sizeof(uint32_t), false);
+
+    uint8_t interrupts[24] = {
+      saveState.interrupts[0].factor_flag_reg, saveState.interrupts[0].mask_reg, saveState.interrupts[0].triggered, saveState.interrupts[0].vector,
+      saveState.interrupts[1].factor_flag_reg, saveState.interrupts[1].mask_reg, saveState.interrupts[1].triggered, saveState.interrupts[1].vector,
+      saveState.interrupts[2].factor_flag_reg, saveState.interrupts[2].mask_reg, saveState.interrupts[2].triggered, saveState.interrupts[2].vector,
+      saveState.interrupts[3].factor_flag_reg, saveState.interrupts[3].mask_reg, saveState.interrupts[3].triggered, saveState.interrupts[3].vector,
+      saveState.interrupts[4].factor_flag_reg, saveState.interrupts[4].mask_reg, saveState.interrupts[4].triggered, saveState.interrupts[4].vector,
+      saveState.interrupts[5].factor_flag_reg, saveState.interrupts[5].mask_reg, saveState.interrupts[5].triggered, saveState.interrupts[5].vector,
+    };
+
+    dict_write_data(out_iter, MESSAGE_KEY_STATEinterrupts, interrupts, sizeof(interrupts));
+
+    dict_write_data(out_iter, MESSAGE_KEY_STATEmemory, saveState.memory, sizeof(saveState.memory));
+
+     dict_write_end(out_iter);
+    // Send this message
+    result = app_message_outbox_send();
+
+    // Check the result
+    if(result != APP_MSG_OK) {
+      APP_LOG(APP_LOG_LEVEL_ERROR, "Error sending the outbox: %d", (int)result);
+    }
+    else
+    {
+      APP_LOG(APP_LOG_LEVEL_DEBUG, "Save file sent successfully to phone!");
+    }
+  } else {
+    // The outbox cannot be used right now
+    APP_LOG(APP_LOG_LEVEL_ERROR, "Error preparing the outbox: %d", (int)result);
+  }
+}
+
 static void deinit() {
   window_destroy(s_main_window);
 
-  APP_LOG(APP_LOG_LEVEL_DEBUG, "Saving state file to persistant storage...");
-  //TODO handle sending save file + timestamp to phone
-  flat_state_t saveState = cpu_get_flat_state();
-  persist_write_data(s_saveStateKey, &saveState, sizeof(flat_state_t));
-  APP_LOG(APP_LOG_LEVEL_DEBUG, "Done saving... %d", saveState.pc);
+  // Handle saving state
+  saveCurrentState();
 
   // Release tamalib
   tamalib_release();
