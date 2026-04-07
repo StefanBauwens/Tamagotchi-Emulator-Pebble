@@ -401,6 +401,9 @@ static void prv_inbox_received_handler(DictionaryIterator *iter, void *context) 
   Tuple *STATEinterrupts_t = dict_find(iter, MESSAGE_KEY_STATEinterrupts);
   Tuple *STATEmemory_t = dict_find(iter, MESSAGE_KEY_STATEmemory);
 
+  Tuple *STATEselected_icon_t = dict_find(iter, MESSAGE_KEY_STATEselected_icon);
+  Tuple *STATEshowing_attention_icon_t = dict_find(iter, MESSAGE_KEY_STATEshowing_attention_icon);
+
   if(STATEnone_t)
   {
     s_clearTextLayerOnScreenRefresh = true;
@@ -477,6 +480,14 @@ static void prv_inbox_received_handler(DictionaryIterator *iter, void *context) 
 
     s_hasReceivedSaveFile = true;
     s_clearTextLayerOnScreenRefresh = true;
+
+    if (STATEselected_icon_t && STATEshowing_attention_icon_t)
+    {
+      s_selectedIcon = STATEselected_icon_t->value->int8;
+      s_showingAttentionIcon = STATEshowing_attention_icon_t->value->int8;
+      layer_mark_dirty(s_icons_layer);
+    }
+
     initTamalib();
   }
 }
@@ -667,6 +678,10 @@ static void saveCurrentState()
     dict_write_data(out_iter, MESSAGE_KEY_STATEinterrupts, interrupts, sizeof(interrupts));
 
     dict_write_data(out_iter, MESSAGE_KEY_STATEmemory, saveState.memory, sizeof(saveState.memory));
+
+    // handle icons
+    dict_write_int(out_iter, MESSAGE_KEY_STATEselected_icon, &s_selectedIcon, sizeof(int8_t), true);
+    dict_write_int(out_iter, MESSAGE_KEY_STATEshowing_attention_icon, &s_showingAttentionIcon, sizeof(int8_t), true);
 
      dict_write_end(out_iter);
     // Send this message

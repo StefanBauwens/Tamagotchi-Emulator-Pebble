@@ -33,7 +33,9 @@
             "STATEcall_depth",
             "STATEinterrupts",
             "STATEmemory",
-            "STATEnone"
+            "STATEnone",
+            "STATEselected_icon",
+            "STATEshowing_attention_icon"
         ],
         "projectType": "native",
         "resources": {
