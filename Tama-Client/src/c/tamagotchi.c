@@ -2,7 +2,7 @@
 #define FPS 30
 #define FPS_DELAY 1000/FPS //ms
 #define STEP_DELAY 1 //ms
-#define STEPS_PER_DELAY 600//55  //TODO
+#define STEPS_PER_DELAY 600//55  
 
 #define VRAM_SIZE (64 + 13)
 #define BYTES_PER_LINE 32
@@ -12,7 +12,7 @@
 
 #include <pebble.h>
 #include "tamalib/tamalib.h"
-//#include "rom.h" //TODO temp
+//#include "rom.h" 
 
 static void initTamalib(void); 
 
@@ -142,7 +142,7 @@ static hal_t hal = {
 /*   END HAL T FUNCTIONS   */
 /***************************/
 
-void set_screen_to_last_state(uint8_t *fullRam) {
+void set_screen_to_last_state(uint8_t *fullRam) { // gets screen data from memory and sets it to the screen
     uint8_t vram[VRAM_SIZE];
 
     memcpy(vram, fullRam + 320, VRAM_SIZE);
@@ -173,7 +173,6 @@ void set_screen_to_last_state(uint8_t *fullRam) {
     COPY_RANGE_REVERSE(60, 68);
 
     int totalBytes = idx;
-    //int rows = (totalBytes + BYTES_PER_LINE - 1) / BYTES_PER_LINE;
 
     for (int i = 0; i < totalBytes; i++) {
         uint8_t byte = adjustedVram[i];
@@ -195,11 +194,11 @@ void set_screen_to_last_state(uint8_t *fullRam) {
     #undef COPY_RANGE_REVERSE
 }
 
-static void milli_tick() //runs once every ms. //TODO can run better I think. Check how I did it with pebble client
+static void milli_tick() //runs once every ms.
 {
   if (s_hasReceivedRom && s_hasReceivedSaveFile)
   {
-    for (size_t i = 0; i < STEPS_PER_DELAY; i++) //TODO figure out how much to get an exact value
+    for (size_t i = 0; i < STEPS_PER_DELAY; i++)
     {
         tamalib_step();
     } 
@@ -336,8 +335,6 @@ static void screen_update_proc(Layer *layer, GContext *ctx) {
 static void prv_inbox_received_handler(DictionaryIterator *iter, void *context) {  
   APP_LOG(APP_LOG_LEVEL_DEBUG, "inbox received");
 
-  //TODO handle save file incoming
-
   Tuple *ready_tuple_t = dict_find(iter, MESSAGE_KEY_JSReady);
 
   if(ready_tuple_t) {
@@ -367,7 +364,7 @@ static void prv_inbox_received_handler(DictionaryIterator *iter, void *context) 
         g_program[index] = value & 0x0FFF; // ensure 12-bit
 
         static char progress_text[25];
-        int percentage = (offset * 100)/12288; //TODO check
+        int percentage = (offset * 100)/12288;
         snprintf(progress_text, sizeof(progress_text), "Loading ROM %d%%", percentage);
         text_layer_set_text(s_text_layer, progress_text);
     }
@@ -377,9 +374,7 @@ static void prv_inbox_received_handler(DictionaryIterator *iter, void *context) 
       text_layer_set_text(s_text_layer, "Loading ROM 100%");
       APP_LOG(APP_LOG_LEVEL_DEBUG, "Reached end of ROM!");
       s_hasReceivedRom = true;
-      //s_clearTextLayerOnScreenRefresh = true;
       // wait for save file from js
-      //initTamalib(); 
     }
   }
 
@@ -545,7 +540,7 @@ static void main_window_load(Window *window) {
   //TODO: handle screen when app starts, show pixelated loading screen? send message that pebble app is open? i guess js know that
 }
 
-static void main_window_unload(Window *window) { //TODO save state when exiting
+static void main_window_unload(Window *window) {
   // Destroy backrgound bitmap and its layer
   gbitmap_destroy(s_bitmap_bg);
   bitmap_layer_destroy(s_background_layer);
@@ -595,7 +590,7 @@ static void initTamalib() {
   }
 }
 
-static void init() {
+static void init() { //TODO show error when no connection to phone can be made!
   // Create main Window element and assign to pointer
   s_main_window = window_create();
 
@@ -614,7 +609,7 @@ static void init() {
   // Open AppMessage connection
   app_message_register_inbox_received(prv_inbox_received_handler);
   //app_message_open(256, 128); 
-  app_message_open(2048, 2048);
+  app_message_open(2048, 2048); // tested on pebble 2 duo
 
   // Listen for button events
   window_set_click_config_provider(s_main_window, click_config_provider);
@@ -623,12 +618,6 @@ static void init() {
 static void saveCurrentState()
 {
   if (!s_hasReceivedRom) return; // no point in sending save if we don't even have the rom yet.
-
-  // save to persistant storage as backup
-  //APP_LOG(APP_LOG_LEVEL_DEBUG, "Saving state file to persistant storage...");
-  //flat_state_t saveState = cpu_get_flat_state();
-  //persist_write_data(s_saveStateKey, &saveState, sizeof(flat_state_t));
-  //APP_LOG(APP_LOG_LEVEL_DEBUG, "Done saving. Sending to phone...");
   
   APP_LOG(APP_LOG_LEVEL_DEBUG, "Getting save file and sending to phone...");
 
