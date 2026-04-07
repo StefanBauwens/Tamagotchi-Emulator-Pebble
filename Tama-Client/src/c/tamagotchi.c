@@ -33,7 +33,7 @@ static GBitmap *s_bitmap_icon8;
 //static const uint8_t LCD_HEIGHT = 16;
 
 static int8_t s_selectedIcon = -1; // -1 is none, 0-6 says what icon
-static bool s_showingAttentionIcon = true;
+static bool s_showingAttentionIcon = false;
 static bool s_js_ready;
 static bool s_pixelsChanged = false;
 static uint32_t s_saveStateKey = 32; 
@@ -41,7 +41,9 @@ static uint32_t s_saveStateKey = 32;
 static bool_t s_screen_buffer[LCD_HEIGHT][LCD_WIDTH] = {{0}};
 static u12_t g_program[6144] = {0};
 static bool s_hasReceivedRom = false;
+static bool s_hasReceivedSaveFile = false;
 static bool s_clearTextLayerOnScreenRefresh = false;
+static flat_state_t stateToLoad = {0};
 
 //ticks
 static AppTimer *milli_tick_handler;
@@ -139,7 +141,7 @@ static hal_t hal = {
 
 static void milli_tick() //runs once every ms. //TODO can run better I think. Check how I did it with pebble client
 {
-  if (s_hasReceivedRom)
+  if (s_hasReceivedRom && s_hasReceivedSaveFile)
   {
     for (size_t i = 0; i < STEPS_PER_DELAY; i++) //TODO figure out how much to get an exact value
     {
@@ -151,7 +153,7 @@ static void milli_tick() //runs once every ms. //TODO can run better I think. Ch
 
 static void screen_tick() //runs every 33 ms for about 30fps
 {
-  if (s_hasReceivedRom)
+  if (s_hasReceivedRom && s_hasReceivedSaveFile)
   {
     hal_update_screen();
   }
@@ -166,34 +168,34 @@ static void screen_tick() //runs every 33 ms for about 30fps
 // Button presses
 static void on_button_up_press(ClickRecognizerRef recognizer, void *context) //1
 {
-  if (!s_hasReceivedRom) return;
+  if (!s_hasReceivedRom || !s_hasReceivedSaveFile) return;
   tamalib_set_button(BTN_LEFT, BTN_STATE_PRESSED);
 }
 static void on_button_select_press(ClickRecognizerRef recognizer, void *context) //2
 {
-  if (!s_hasReceivedRom) return;
+  if (!s_hasReceivedRom || !s_hasReceivedSaveFile) return;
   tamalib_set_button(BTN_MIDDLE, BTN_STATE_PRESSED);
 }
 static void on_button_down_press(ClickRecognizerRef recognizer, void *context) //3
 {
-  if (!s_hasReceivedRom) return;
+  if (!s_hasReceivedRom || !s_hasReceivedSaveFile) return;
   tamalib_set_button(BTN_RIGHT, BTN_STATE_PRESSED);
 }
 
 // Button releases
 static void on_button_up_release(ClickRecognizerRef recognizer, void *context) //4
 {
-  if (!s_hasReceivedRom) return;
+  if (!s_hasReceivedRom || !s_hasReceivedSaveFile) return;
   tamalib_set_button(BTN_LEFT, BTN_STATE_RELEASED);
 }
 static void on_button_select_release(ClickRecognizerRef recognizer, void *context) //5
 {
-  if (!s_hasReceivedRom) return;
+  if (!s_hasReceivedRom || !s_hasReceivedSaveFile) return;
   tamalib_set_button(BTN_MIDDLE, BTN_STATE_RELEASED);
 }
 static void on_button_down_release(ClickRecognizerRef recognizer, void *context) //6
 {
-  if (!s_hasReceivedRom) return;
+  if (!s_hasReceivedRom || !s_hasReceivedSaveFile) return;
   tamalib_set_button(BTN_RIGHT, BTN_STATE_RELEASED);
 }
 
@@ -319,9 +321,112 @@ static void prv_inbox_received_handler(DictionaryIterator *iter, void *context) 
       text_layer_set_text(s_text_layer, "Loading ROM 100%");
       APP_LOG(APP_LOG_LEVEL_DEBUG, "Reached end of ROM!");
       s_hasReceivedRom = true;
-      s_clearTextLayerOnScreenRefresh = true;
-      initTamalib();
+      //s_clearTextLayerOnScreenRefresh = true;
+      // wait for save file from js
+      //initTamalib(); 
     }
+  }
+
+  // Handle incoming save state
+  Tuple *STATEnone_t = dict_find(iter, MESSAGE_KEY_STATEnone);
+
+  Tuple *STATEpc_t = dict_find(iter, MESSAGE_KEY_STATEpc);
+  Tuple *STATEx_t = dict_find(iter, MESSAGE_KEY_STATEx);
+  Tuple *STATEy_t = dict_find(iter, MESSAGE_KEY_STATEy);
+  Tuple *STATEa_t = dict_find(iter, MESSAGE_KEY_STATEa);
+  Tuple *STATEb_t = dict_find(iter, MESSAGE_KEY_STATEb);
+  Tuple *STATEnp_t = dict_find(iter, MESSAGE_KEY_STATEnp);
+  Tuple *STATEsp_t = dict_find(iter, MESSAGE_KEY_STATEsp);
+  Tuple *STATEflags_t = dict_find(iter, MESSAGE_KEY_STATEflags);
+
+  Tuple *STATEtick_counter_t = dict_find(iter, MESSAGE_KEY_STATEtick_counter);
+  Tuple *STATEclk_timer_timestamp_t = dict_find(iter, MESSAGE_KEY_STATEclk_timer_timestamp);
+  Tuple *STATEprog_timer_timestamp_t = dict_find(iter, MESSAGE_KEY_STATEprog_timer_timestamp);
+  Tuple *STATEprog_timer_enabled_t = dict_find(iter, MESSAGE_KEY_STATEprog_timer_enabled);
+  Tuple *STATEprog_timer_data_t = dict_find(iter, MESSAGE_KEY_STATEprog_timer_data);
+  Tuple *STATEprog_timer_rld_t = dict_find(iter, MESSAGE_KEY_STATEprog_timer_rld);
+  Tuple *STATEcall_depth_t = dict_find(iter, MESSAGE_KEY_STATEcall_depth);
+
+  Tuple *STATEinterrupts_t = dict_find(iter, MESSAGE_KEY_STATEinterrupts);
+  Tuple *STATEmemory_t = dict_find(iter, MESSAGE_KEY_STATEmemory);
+
+  if(STATEnone_t)
+  {
+    s_clearTextLayerOnScreenRefresh = true;
+    initTamalib();
+  }
+
+  if (STATEpc_t && STATEmemory_t) // assume whole block
+  {
+    text_layer_set_text(s_text_layer, "Loading save state...");
+
+    uint16_t state_pc = STATEpc_t->value->uint16;
+    uint16_t state_x = STATEx_t->value->uint16;
+    uint16_t state_y = STATEy_t->value->uint16;
+    uint8_t state_a = STATEa_t->value->uint8;
+    uint8_t state_b = STATEb_t->value->uint8;
+    uint8_t state_np = STATEnp_t->value->uint8;
+    uint8_t state_sp = STATEsp_t->value->uint8;
+    uint8_t state_flags = STATEflags_t->value->uint8;
+
+    uint32_t state_tick_counter = STATEtick_counter_t->value->uint32;
+    uint32_t state_clk_timer_timestamp = STATEclk_timer_timestamp_t->value->uint32;
+    uint32_t state_prog_timer_timestamp = STATEprog_timer_timestamp_t->value->uint32;
+    uint8_t state_prog_timer_enabled = STATEprog_timer_enabled_t->value->uint8;
+    uint8_t state_prog_timer_data = STATEprog_timer_data_t->value->uint8;
+    uint8_t state_prog_timer_rld = STATEprog_timer_rld_t->value->uint8;
+    uint32_t state_call_depth = STATEcall_depth_t->value->uint32;
+
+    uint8_t *state_interrupts = STATEinterrupts_t->value->data;
+    uint8_t *state_memory = STATEmemory_t->value->data;
+
+    stateToLoad.pc = state_pc;
+    stateToLoad.x = state_x;
+    stateToLoad.y = state_y;
+    stateToLoad.a = state_a;
+    stateToLoad.b = state_b;
+    stateToLoad.np = state_np;
+    stateToLoad.sp = state_sp;
+    stateToLoad.flags = state_flags;
+
+    stateToLoad.tick_counter = state_tick_counter;
+    stateToLoad.clk_timer_timestamp = state_clk_timer_timestamp;
+    stateToLoad.prog_timer_timestamp = state_prog_timer_timestamp;
+    stateToLoad.prog_timer_enabled = state_prog_timer_enabled;
+    stateToLoad.prog_timer_data = state_prog_timer_data;
+    stateToLoad.prog_timer_rld = state_prog_timer_rld;
+    stateToLoad.call_depth = state_call_depth;
+
+    stateToLoad.interrupts[0].factor_flag_reg = state_interrupts[0];
+    stateToLoad.interrupts[0].mask_reg        = state_interrupts[1];  
+    stateToLoad.interrupts[0].triggered       = state_interrupts[2];  
+    stateToLoad.interrupts[0].vector          = state_interrupts[3];  
+    stateToLoad.interrupts[1].factor_flag_reg = state_interrupts[4];
+    stateToLoad.interrupts[1].mask_reg        = state_interrupts[5];  
+    stateToLoad.interrupts[1].triggered       = state_interrupts[6];  
+    stateToLoad.interrupts[1].vector          = state_interrupts[7];  
+    stateToLoad.interrupts[2].factor_flag_reg = state_interrupts[8];
+    stateToLoad.interrupts[2].mask_reg        = state_interrupts[9];  
+    stateToLoad.interrupts[2].triggered       = state_interrupts[10];  
+    stateToLoad.interrupts[2].vector          = state_interrupts[11]; 
+    stateToLoad.interrupts[3].factor_flag_reg = state_interrupts[12];
+    stateToLoad.interrupts[3].mask_reg        = state_interrupts[13];  
+    stateToLoad.interrupts[3].triggered       = state_interrupts[14];  
+    stateToLoad.interrupts[3].vector          = state_interrupts[15]; 
+    stateToLoad.interrupts[4].factor_flag_reg = state_interrupts[16];
+    stateToLoad.interrupts[4].mask_reg        = state_interrupts[17];  
+    stateToLoad.interrupts[4].triggered       = state_interrupts[18];  
+    stateToLoad.interrupts[4].vector          = state_interrupts[19];         
+    stateToLoad.interrupts[5].factor_flag_reg = state_interrupts[20];
+    stateToLoad.interrupts[5].mask_reg        = state_interrupts[21];  
+    stateToLoad.interrupts[5].triggered       = state_interrupts[22];  
+    stateToLoad.interrupts[5].vector          = state_interrupts[23]; 
+
+    memcpy(stateToLoad.memory, state_memory, sizeof(stateToLoad.memory));
+
+    s_hasReceivedSaveFile = true;
+    s_clearTextLayerOnScreenRefresh = true;
+    initTamalib();
   }
 }
 
@@ -417,22 +522,18 @@ static void initTamalib() {
   // Register HAL
   tamalib_register_hal(&hal);
 
-  //persist_delete(s_saveStateKey); //TODO temp
   // Check for save file
   APP_LOG(APP_LOG_LEVEL_DEBUG, "Checking for save file");
-  if (persist_exists(s_saveStateKey)) {
+  if (s_hasReceivedSaveFile) {
     APP_LOG(APP_LOG_LEVEL_DEBUG, "Save state found.Loading...");
-    // Read persisted value
 
-    // create instance
-    flat_state_t saveState = {0}; 
-    persist_read_data(s_saveStateKey, &saveState, sizeof(flat_state_t));
-    //cpu_set_state(&saveState);
-    cpu_init_from_state(g_program, &saveState, NULL, 1000000);
+    cpu_init_from_state(g_program, &stateToLoad, NULL, 1000000);
     APP_LOG(APP_LOG_LEVEL_DEBUG, "Save state loaded!");
   }
   else
   {
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "No save file");
+    s_hasReceivedSaveFile = true;
     tamalib_init(g_program, NULL, 1000000);
   }
 }
@@ -467,18 +568,22 @@ static void saveCurrentState()
   if (!s_hasReceivedRom) return; // no point in sending save if we don't even have the rom yet.
 
   // save to persistant storage as backup
-  APP_LOG(APP_LOG_LEVEL_DEBUG, "Saving state file to persistant storage...");
-  flat_state_t saveState = cpu_get_flat_state();
-  persist_write_data(s_saveStateKey, &saveState, sizeof(flat_state_t));
-  APP_LOG(APP_LOG_LEVEL_DEBUG, "Done saving. Sending to phone...");
+  //APP_LOG(APP_LOG_LEVEL_DEBUG, "Saving state file to persistant storage...");
+  //flat_state_t saveState = cpu_get_flat_state();
+  //persist_write_data(s_saveStateKey, &saveState, sizeof(flat_state_t));
+  //APP_LOG(APP_LOG_LEVEL_DEBUG, "Done saving. Sending to phone...");
+  
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "Getting save file and sending to phone...");
 
-  //TODO handle sending save file + timestamp to phone
   // send to phone? Is this possible since it's async and stuff?
   if(!s_js_ready)
   {
     APP_LOG(APP_LOG_LEVEL_WARNING, "JS is not yet ready to receive messages!"); // warn user!
     return;
   }
+
+  // Send save file to phone 
+  flat_state_t saveState = cpu_get_flat_state();
 
   // Declare the dictionary's iterator
   DictionaryIterator *out_iter;

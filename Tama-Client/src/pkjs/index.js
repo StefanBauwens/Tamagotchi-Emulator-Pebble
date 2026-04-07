@@ -3,10 +3,11 @@ var screenArray = new Uint8Array(74).fill(128);
 
 var stateTest = true;
 var runningXHRRequests = 0;
-var lastButtonState = "0";
+//var lastButtonState = "0";
 
 const TIMEOUT_MS = 1000;
 const ROM_KEY = "ROM";
+const LAST_STATE_KEY = "LAST_STATE";
 
 var xhrRequest = function (url, type, callback) {
     var xhr = new XMLHttpRequest();
@@ -65,6 +66,7 @@ function SendROM(buffer) {
         if (offset >= data.length) 
         {
             console.log("Finished sending ROM!");
+            SendSaveState(); //TODO test
             return;
         }
 
@@ -87,6 +89,21 @@ function SendROM(buffer) {
     }
 }
 
+function SendSaveState()
+{
+    if (localStorage.getItem(LAST_STATE_KEY) !== null)
+    {
+        console.log("Save file found js. Sending...");
+        Pebble.sendAppMessage(JSON.parse(localStorage.getItem(LAST_STATE_KEY)));
+        console.log("Save file sent!");
+    }
+    else
+    {
+        console.log("No save file!");
+        Pebble.sendAppMessage({'STATEnone': 1});
+    }
+}
+
 // Listen for when the watchface is opened
 Pebble.addEventListener('ready', 
     function(e) {
@@ -106,6 +123,11 @@ Pebble.addEventListener('appmessage', function(e) {
     var dict = e.payload;
     console.log("Got message: " + JSON.stringify(dict));
 
+    if ('STATEpc' in dict)
+    {
+        localStorage.setItem(LAST_STATE_KEY, JSON.stringify(dict));
+        console.log("Saved last state to js localstorage...");
+    }
     /*if ('Button' in dict)
     {
         lastButtonState = dict['Button'];

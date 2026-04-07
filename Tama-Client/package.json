@@ -32,7 +32,8 @@
             "STATEprog_timer_rld",
             "STATEcall_depth",
             "STATEinterrupts",
-            "STATEmemory"
+            "STATEmemory",
+            "STATEnone"
         ],
         "projectType": "native",
         "resources": {
