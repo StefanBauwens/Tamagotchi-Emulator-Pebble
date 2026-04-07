@@ -4,6 +4,10 @@
 #define STEP_DELAY 1 //ms
 #define STEPS_PER_DELAY 600//55  //TODO
 
+#define VRAM_SIZE (64 + 13)
+#define BYTES_PER_LINE 32
+#define BITS_PER_BYTE 8
+
 //#undef PBL_COLOR // only used for testing B&W
 
 #include <pebble.h>
@@ -58,13 +62,12 @@ static void hal_free(void *ptr) { } // unused
 static void hal_halt(void)
 {
 	//Not yet implemented
-  //TODO exit program?
 }
 
 static bool_t hal_is_log_enabled(log_level_t level) { return false; } // unused
 static void hal_log(log_level_t level, char *buff, ...) { } // unused
 
-static timestamp_t hal_get_timestamp(void) //TODO test
+static timestamp_t hal_get_timestamp(void)
 {
   time_t seconds;
   uint16_t milliseconds;
@@ -86,7 +89,7 @@ static void hal_update_screen(void) //since we're not using tamalib_mainloop we 
 
 static void hal_set_lcd_matrix(u8_t x, u8_t y, bool_t val)
 {
-  s_screen_buffer[y][x] = val; //TTODO
+  s_screen_buffer[y][x] = val;
   s_pixelsChanged = true;
 }
 
@@ -138,6 +141,59 @@ static hal_t hal = {
 /***************************/
 /*   END HAL T FUNCTIONS   */
 /***************************/
+
+void set_screen_to_last_state(uint8_t *fullRam) {
+    uint8_t vram[VRAM_SIZE];
+
+    memcpy(vram, fullRam + 320, VRAM_SIZE);
+
+    uint8_t adjustedVram[VRAM_SIZE];
+    int idx = 0;
+
+    // Helper macro to copy forward
+    #define COPY_RANGE(start, end) \
+        for (int i = (start); i < (end); i++) { \
+            adjustedVram[idx++] = vram[i]; \
+        }
+
+    // Helper macro to copy reversed
+    #define COPY_RANGE_REVERSE(start, end) \
+        for (int i = (end) - 1; i >= (start); i--) { \
+            adjustedVram[idx++] = vram[i]; \
+        }
+
+    // Replicating your JS slices
+    COPY_RANGE(0, 8);
+    COPY_RANGE(9, 17);
+    COPY_RANGE_REVERSE(29, 37);
+    COPY_RANGE_REVERSE(20, 28);
+    COPY_RANGE(40, 48);
+    COPY_RANGE(49, 57);
+    COPY_RANGE_REVERSE(69, 77);
+    COPY_RANGE_REVERSE(60, 68);
+
+    int totalBytes = idx;
+    //int rows = (totalBytes + BYTES_PER_LINE - 1) / BYTES_PER_LINE;
+
+    for (int i = 0; i < totalBytes; i++) {
+        uint8_t byte = adjustedVram[i];
+
+        int x = (i % BYTES_PER_LINE);
+        int baseY = (i / BYTES_PER_LINE) * BITS_PER_BYTE;
+
+        for (int bitIndex = 0; bitIndex < BITS_PER_BYTE; bitIndex++) {
+          int bit = (byte >> bitIndex) & 1;  
+          //int bit = (byte >> (7 - bitIndex)) & 1;
+
+            int y = baseY + bitIndex;
+
+            hal.set_lcd_matrix(x, y, bit);
+        }
+    }
+
+    #undef COPY_RANGE
+    #undef COPY_RANGE_REVERSE
+}
 
 static void milli_tick() //runs once every ms. //TODO can run better I think. Check how I did it with pebble client
 {
@@ -528,6 +584,7 @@ static void initTamalib() {
     APP_LOG(APP_LOG_LEVEL_DEBUG, "Save state found.Loading...");
 
     cpu_init_from_state(g_program, &stateToLoad, NULL, 1000000);
+    set_screen_to_last_state(stateToLoad.memory);
     APP_LOG(APP_LOG_LEVEL_DEBUG, "Save state loaded!");
   }
   else
