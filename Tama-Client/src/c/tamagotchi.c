@@ -507,7 +507,11 @@ static void main_window_load(Window *window) {
 
   // Create GBitmap for background 
 #if defined(PBL_COLOR)
+  #if defined(PBL_PLATFORM_CHALK)
+  s_bitmap_bg = gbitmap_create_with_resource(RESOURCE_ID_BG_IMAGE_CHALK);
+  #else
   s_bitmap_bg = gbitmap_create_with_resource(RESOURCE_ID_BG_IMAGE);
+  #endif
 #else
   s_bitmap_bg = gbitmap_create_with_resource(RESOURCE_ID_BG_IMAGE_BW);
 #endif
