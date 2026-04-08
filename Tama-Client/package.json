@@ -41,6 +41,12 @@
         "resources": {
             "media": [
                 {
+                    "menuIcon": true,
+                    "type": "bitmap",
+                    "name": "APP_ICON",
+                    "file": "images/app_icon.png"
+                },
+                {
                     "file": "images/bgColor.png",
                     "name": "BG_IMAGE",
                     "type": "bitmap"
