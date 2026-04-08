@@ -1,14 +1,11 @@
 // TODO
 // Fix pebble round
-// Make pebble 2 round work nicely + maybe show shell + scale up
-// Make pebble time 2 work nicely + scale up + shell?
 // Improve loading to maybe pixelated progress bar?
 // Show also error if no connection with watch!!
 // Show error if bad rom url
 // Make clay settings page
 // Tell user fetching save file from server/ syncing with server
 // Change basalt bg?
-// Move screen slightly down (1 or 2 pixels) for emery and gabbro + icons layer
 // Fix icons emery and gabbro -> scale 125%
 
 #define bitRead(value, bit) (((value) >> (bit)) & 0x01)
@@ -286,7 +283,7 @@ static void icons_update_proc(Layer *layer, GContext *ctx) {
   {
     #if defined(PBL_PLATFORM_EMERY) || defined(PBL_PLATFORM_GABBRO)
     uint8_t xPos = 12 + ((s_selectedIcon%4) * 40); 
-    uint8_t yPos = (s_selectedIcon > 3 ? 120 : 0); //TODO test
+    uint8_t yPos = (s_selectedIcon > 3 ? 120 : 0);
     #else
     uint8_t xPos = 12 + ((s_selectedIcon%4) * 32);
     uint8_t yPos = (s_selectedIcon > 3 ? 100 : 0);
@@ -333,7 +330,7 @@ static void icons_update_proc(Layer *layer, GContext *ctx) {
   if(s_showingAttentionIcon)
   {
     #if defined(PBL_PLATFORM_EMERY) || defined(PBL_PLATFORM_GABBRO)
-    graphics_draw_bitmap_in_rect(ctx, s_bitmap_icon8, GRect(12+(40*3), 120, 22, 22)); //TODO test
+    graphics_draw_bitmap_in_rect(ctx, s_bitmap_icon8, GRect(12+(40*3), 120, 27, 22)); //TODO test
     #else
     graphics_draw_bitmap_in_rect(ctx, s_bitmap_icon8, GRect(108, 100, 22, 18));
     #endif
@@ -353,7 +350,7 @@ static void screen_update_proc(Layer *layer, GContext *ctx) {
       if (s_screen_buffer[h][w])
       {
         #if defined(PBL_PLATFORM_EMERY) || defined(PBL_PLATFORM_GABBRO)
-        graphics_fill_rect(ctx, GRect(w * 5, h * 5, 4, 4), 0, GCornerNone); //TODO test
+        graphics_fill_rect(ctx, GRect(w * 5, h * 5, 4, 4), 0, GCornerNone);
         #else
         graphics_fill_rect(ctx, GRect(w * 4, h * 4, 3, 3), 0, GCornerNone);
         #endif
@@ -587,9 +584,9 @@ static void main_window_load(Window *window) {
 #if defined(PBL_PLATFORM_CHALK)
   s_screen_layer = layer_create(GRect(8+18, 51+6, 128, 64));
 #elif defined(PBL_PLATFORM_GABBRO)
-  s_screen_layer = layer_create(GRect(50, 92, 160, 80)); //TODO added 2
+  s_screen_layer = layer_create(GRect(50, 92, 160, 80));
 #elif defined(PBL_PLATFORM_EMERY)
-  s_screen_layer = layer_create(GRect(20, 76, 160, 80)); //TODO added 2
+  s_screen_layer = layer_create(GRect(20, 76, 160, 80));
 #else
   s_screen_layer = layer_create(GRect(8, 51, 128, 64));
 #endif
