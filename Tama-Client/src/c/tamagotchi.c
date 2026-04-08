@@ -6,7 +6,6 @@
 // Make clay settings page
 // Tell user fetching save file from server/ syncing with server
 // Change basalt bg?
-// Fix icons emery and gabbro -> scale 125%
 
 #define bitRead(value, bit) (((value) >> (bit)) & 0x01)
 #define FPS 30
@@ -330,7 +329,7 @@ static void icons_update_proc(Layer *layer, GContext *ctx) {
   if(s_showingAttentionIcon)
   {
     #if defined(PBL_PLATFORM_EMERY) || defined(PBL_PLATFORM_GABBRO)
-    graphics_draw_bitmap_in_rect(ctx, s_bitmap_icon8, GRect(12+(40*3), 120, 27, 22)); //TODO test
+    graphics_draw_bitmap_in_rect(ctx, s_bitmap_icon8, GRect(12+(40*3), 120, 27, 22)); 
     #else
     graphics_draw_bitmap_in_rect(ctx, s_bitmap_icon8, GRect(108, 100, 22, 18));
     #endif
