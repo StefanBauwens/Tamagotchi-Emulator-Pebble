@@ -511,6 +511,8 @@ static void main_window_load(Window *window) {
   s_bitmap_bg = gbitmap_create_with_resource(RESOURCE_ID_BG_IMAGE_CHALK);
   #elif defined(PBL_PLATFORM_GABBRO)
   s_bitmap_bg = gbitmap_create_with_resource(RESOURCE_ID_BG_IMAGE_GABBRO);
+  #elif defined(PBL_PLATFORM_EMERY)
+  s_bitmap_bg = gbitmap_create_with_resource(RESOURCE_ID_BG_IMAGE_EMERY);
   #else
   s_bitmap_bg = gbitmap_create_with_resource(RESOURCE_ID_BG_IMAGE);
   #endif
@@ -523,6 +525,8 @@ static void main_window_load(Window *window) {
   s_background_layer = bitmap_layer_create(GRect(0, 0, 180, 180));
 #elif defined(PBL_PLATFORM_GABBRO)
     s_background_layer = bitmap_layer_create(GRect(0, 0, 260, 260));
+#elif defined(PBL_PLATFORM_EMERY)
+    s_background_layer = bitmap_layer_create(GRect(0, 0, 200, 228));
 #else
   s_background_layer = bitmap_layer_create(GRect(0, 0, 144, 168));
 #endif
@@ -545,6 +549,10 @@ static void main_window_load(Window *window) {
   // Create icons layer
 #if defined(PBL_PLATFORM_CHALK)
   s_icons_layer = layer_create(GRect(0+18, 24+6, 144, 146));
+#elif defined(PBL_PLATFORM_GABBRO)
+  s_icons_layer = layer_create(GRect(0+58, 24+46, 144, 146));
+#elif defined(PBL_PLATFORM_EMERY)
+  s_icons_layer = layer_create(GRect(0+28, 24+30, 144, 146));
 #else
   s_icons_layer = layer_create(GRect(0, 24, 144, 146));
 #endif
@@ -556,6 +564,10 @@ static void main_window_load(Window *window) {
   // Create screen Layer
 #if defined(PBL_PLATFORM_CHALK)
   s_screen_layer = layer_create(GRect(8+18, 51+6, 128, 64));
+#elif defined(PBL_PLATFORM_GABBRO)
+  s_screen_layer = layer_create(GRect(8+58, 51+46, 128, 64));
+#elif defined(PBL_PLATFORM_EMERY)
+  s_screen_layer = layer_create(GRect(8+28, 51+30, 128, 64));
 #else
   s_screen_layer = layer_create(GRect(8, 51, 128, 64));
 #endif

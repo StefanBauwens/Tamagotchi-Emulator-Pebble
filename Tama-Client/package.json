@@ -54,6 +54,14 @@
                     ]
                 },
                 {
+                    "file": "images/bgEmery.png",
+                    "name": "BG_IMAGE_EMERY",
+                    "type": "bitmap",
+                    "targetPlatforms": [
+                        "emery"
+                    ]
+                },
+                {
                     "file": "images/bgChalk.png",
                     "name": "BG_IMAGE_CHALK",
                     "type": "bitmap"
