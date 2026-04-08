@@ -47,13 +47,16 @@
                     "file": "images/app_icon.png"
                 },
                 {
-                    "file": "images/bgColor.png",
+                    "file": "images/bgBasalt.png",
                     "name": "BG_IMAGE",
-                    "type": "bitmap"
+                    "type": "bitmap",
+                    "targetPlatforms": [
+                        "basalt"
+                    ]
                 },
                 {
                     "file": "images/bgGabbro.png",
-                    "name": "BG_IMAGE_GABBRO",
+                    "name": "BG_IMAGE",
                     "type": "bitmap",
                     "targetPlatforms": [
                         "gabbro"
@@ -61,7 +64,7 @@
                 },
                 {
                     "file": "images/bgEmery.png",
-                    "name": "BG_IMAGE_EMERY",
+                    "name": "BG_IMAGE",
                     "type": "bitmap",
                     "targetPlatforms": [
                         "emery"
@@ -69,8 +72,11 @@
                 },
                 {
                     "file": "images/bgChalk.png",
-                    "name": "BG_IMAGE_CHALK",
-                    "type": "bitmap"
+                    "name": "BG_IMAGE",
+                    "type": "bitmap",
+                    "targetPlatforms": [
+                        "chalk"
+                    ]
                 },
                 {
                     "file": "images/bgNoColor.png",
