@@ -334,7 +334,11 @@ static void screen_update_proc(Layer *layer, GContext *ctx) {
     {
       if (s_screen_buffer[h][w])
       {
+        #if defined(PBL_PLATFORM_EMERY) || defined(PBL_PLATFORM_GABBRO)
+        graphics_fill_rect(ctx, GRect(w * 5, h * 5, 4, 4), 0, GCornerNone); //TODO test
+        #else
         graphics_fill_rect(ctx, GRect(w * 4, h * 4, 3, 3), 0, GCornerNone);
+        #endif
       }
     }
   }
