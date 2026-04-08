@@ -2,9 +2,14 @@
 // Fix pebble round
 // Make pebble 2 round work nicely + maybe show shell + scale up
 // Make pebble time 2 work nicely + scale up + shell?
-// do we show unlit lcd slightly on ccolor watches? semi transparent?
 // Improve loading to maybe pixelated progress bar?
 // Show also error if no connection with watch!!
+// Show error if bad rom url
+// Make clay settings page
+// Tell user fetching save file from server/ syncing with server
+// Change basalt bg?
+// Move screen slightly down (1 or 2 pixels) for emery and gabbro + icons layer
+// Fix icons emery and gabbro -> scale 125%
 
 #define bitRead(value, bit) (((value) >> (bit)) & 0x01)
 #define FPS 30

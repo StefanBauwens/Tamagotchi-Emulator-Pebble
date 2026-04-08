@@ -74,42 +74,162 @@
                 {
                     "file": "images/1.png",
                     "name": "ICON1",
-                    "type": "bitmap"
+                    "type": "bitmap",
+                    "targetPlatforms": [
+                        "basalt",
+                        "chalk",
+                        "diorite",
+                        "flint"
+                    ]
                 },
                 {
                     "file": "images/2.png",
                     "name": "ICON2",
-                    "type": "bitmap"
+                    "type": "bitmap",
+                    "targetPlatforms": [
+                        "basalt",
+                        "chalk",
+                        "diorite",
+                        "flint"
+                    ]
                 },
                 {
                     "file": "images/3.png",
                     "name": "ICON3",
-                    "type": "bitmap"
+                    "type": "bitmap",
+                    "targetPlatforms": [
+                        "basalt",
+                        "chalk",
+                        "diorite",
+                        "flint"
+                    ]
                 },
                 {
                     "file": "images/4.png",
                     "name": "ICON4",
-                    "type": "bitmap"
+                    "type": "bitmap",
+                    "targetPlatforms": [
+                        "basalt",
+                        "chalk",
+                        "diorite",
+                        "flint"
+                    ]
                 },
                 {
                     "file": "images/5.png",
                     "name": "ICON5",
-                    "type": "bitmap"
+                    "type": "bitmap",
+                    "targetPlatforms": [
+                        "basalt",
+                        "chalk",
+                        "diorite",
+                        "flint"
+                    ]
                 },
                 {
                     "file": "images/6.png",
                     "name": "ICON6",
-                    "type": "bitmap"
+                    "type": "bitmap",
+                    "targetPlatforms": [
+                        "basalt",
+                        "chalk",
+                        "diorite",
+                        "flint"
+                    ]
                 },
                 {
                     "file": "images/7.png",
                     "name": "ICON7",
-                    "type": "bitmap"
+                    "type": "bitmap",
+                    "targetPlatforms": [
+                        "basalt",
+                        "chalk",
+                        "diorite",
+                        "flint"
+                    ]
                 },
                 {
                     "file": "images/8.png",
                     "name": "ICON8",
-                    "type": "bitmap"
+                    "type": "bitmap",
+                    "targetPlatforms": [
+                        "basalt",
+                        "chalk",
+                        "diorite",
+                        "flint"
+                    ]
+                },
+                {
+                    "file": "images/1_eg.png",
+                    "name": "ICON1",
+                    "type": "bitmap",
+                    "targetPlatforms": [
+                        "emery",
+                        "gabbro"
+                    ]
+                },
+                {
+                    "file": "images/2_eg.png",
+                    "name": "ICON2",
+                    "type": "bitmap",
+                    "targetPlatforms": [
+                        "emery",
+                        "gabbro"
+                    ]
+                },
+                {
+                    "file": "images/3_eg.png",
+                    "name": "ICON3",
+                    "type": "bitmap",
+                    "targetPlatforms": [
+                        "emery",
+                        "gabbro"
+                    ]
+                },
+                {
+                    "file": "images/4_eg.png",
+                    "name": "ICON4",
+                    "type": "bitmap",
+                    "targetPlatforms": [
+                        "emery",
+                        "gabbro"
+                    ]
+                },
+                {
+                    "file": "images/5_eg.png",
+                    "name": "ICON5",
+                    "type": "bitmap",
+                    "targetPlatforms": [
+                        "emery",
+                        "gabbro"
+                    ]
+                },
+                {
+                    "file": "images/6_eg.png",
+                    "name": "ICON6",
+                    "type": "bitmap",
+                    "targetPlatforms": [
+                        "emery",
+                        "gabbro"
+                    ]
+                },
+                {
+                    "file": "images/7_eg.png",
+                    "name": "ICON7",
+                    "type": "bitmap",
+                    "targetPlatforms": [
+                        "emery",
+                        "gabbro"
+                    ]
+                },
+                {
+                    "file": "images/8_eg.png",
+                    "name": "ICON8",
+                    "type": "bitmap",
+                    "targetPlatforms": [
+                        "emery",
+                        "gabbro"
+                    ]
                 }
             ]
         },
