@@ -333,7 +333,7 @@ static void icons_update_proc(Layer *layer, GContext *ctx) {
   if(s_showingAttentionIcon)
   {
     #if defined(PBL_PLATFORM_EMERY) || defined(PBL_PLATFORM_GABBRO)
-    graphics_draw_bitmap_in_rect(ctx, s_bitmap_icon8, GRect(132, 125, 22, 22)); //TODO test
+    graphics_draw_bitmap_in_rect(ctx, s_bitmap_icon8, GRect(12+(40*3), 125, 22, 22)); //TODO test
     #else
     graphics_draw_bitmap_in_rect(ctx, s_bitmap_icon8, GRect(108, 100, 22, 18));
     #endif
@@ -571,10 +571,10 @@ static void main_window_load(Window *window) {
   // Create icons layer
 #if defined(PBL_PLATFORM_CHALK)
   s_icons_layer = layer_create(GRect(0+18, 24+6, 144, 146));
-#elif defined(PBL_PLATFORM_GABBRO) //TODO + add resized icons
-  s_icons_layer = layer_create(GRect(0+58, 24+46, 144, 146));
-#elif defined(PBL_PLATFORM_EMERY) //TODO + add resized icons
-  s_icons_layer = layer_create(GRect(0+28, 24+30, 144, 146));
+#elif defined(PBL_PLATFORM_GABBRO) 
+  s_icons_layer = layer_create(GRect(0+58-13, 24+46-10, 180, 183)); //TODO test
+#elif defined(PBL_PLATFORM_EMERY)
+  s_icons_layer = layer_create(GRect(0+28-13, 24+30-10, 180, 183)); //TODO test
 #else
   s_icons_layer = layer_create(GRect(0, 24, 144, 146));
 #endif
