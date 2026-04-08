@@ -43,7 +43,22 @@
                 {
                     "file": "images/bgColor.png",
                     "name": "BG_IMAGE",
-                    "type": "bitmap"
+                    "type": "bitmap",
+                    "targetPlatforms": [
+                        "basalt",
+                        "diorite",
+                        "flint",
+                        "emery"
+                    ]
+                },
+                {
+                    "file": "images/bgChalk.png",
+                    "name": "BG_IMAGE",
+                    "type": "bitmap",
+                    "targetPlatforms": [
+                        "chalk",
+                        "gabbro"
+                    ]
                 },
                 {
                     "file": "images/bgNoColor.png",
