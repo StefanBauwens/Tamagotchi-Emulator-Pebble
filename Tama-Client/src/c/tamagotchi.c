@@ -284,8 +284,13 @@ static void icons_update_proc(Layer *layer, GContext *ctx) {
 
   if(s_selectedIcon >= 0)
   {
+    #if defined(PBL_PLATFORM_EMERY) || defined(PBL_PLATFORM_GABBRO)
+    uint8_t xPos = 12 + ((s_selectedIcon%4) * 40); //TODO test
+    uint8_t yPos = (s_selectedIcon > 3 ? 125 : 0); //TODO test
+    #else
     uint8_t xPos = 12 + ((s_selectedIcon%4) * 32);
     uint8_t yPos = (s_selectedIcon > 3 ? 100 : 0);
+    #endif
 
     GBitmap* selected_icon = s_bitmap_icon7;
     switch(s_selectedIcon)
@@ -317,13 +322,21 @@ static void icons_update_proc(Layer *layer, GContext *ctx) {
     }
 
     // Draw selected icon if selected
+    #if defined(PBL_PLATFORM_EMERY) || defined(PBL_PLATFORM_GABBRO)
+    graphics_draw_bitmap_in_rect(ctx, selected_icon, GRect(xPos, yPos, 27, 22));
+    #else
     graphics_draw_bitmap_in_rect(ctx, selected_icon, GRect(xPos, yPos, 22, 18));
+    #endif
   }
 
   // Handle attention icon
   if(s_showingAttentionIcon)
   {
-    graphics_draw_bitmap_in_rect(ctx, s_bitmap_icon8, GRect(108, 100, 22, 18)); 
+    #if defined(PBL_PLATFORM_EMERY) || defined(PBL_PLATFORM_GABBRO)
+    graphics_draw_bitmap_in_rect(ctx, s_bitmap_icon8, GRect(132, 125, 22, 22)); //TODO test
+    #els7
+    graphics_draw_bitmap_in_rect(ctx, s_bitmap_icon8, GRect(108, 100, 22, 18));
+    #endif
   }
 }
 
