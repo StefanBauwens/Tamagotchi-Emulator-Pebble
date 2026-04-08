@@ -535,21 +535,29 @@ static void main_window_load(Window *window) {
   s_bitmap_icon8 = gbitmap_create_with_resource(RESOURCE_ID_ICON8);
 
   // Create icons layer
-  s_icons_layer = layer_create(GRect(0, 24, 144, 140));
+#if defined(PBL_PLATFORM_CHALK)
+  s_icons_layer = layer_create(GRect(0, 24, 180, 146));
+#else
+  s_icons_layer = layer_create(GRect(0, 30, 144, 146));
+#endif
   layer_set_update_proc(s_icons_layer, icons_update_proc);
 
   // Add to window
   layer_add_child(window_layer, s_icons_layer);
 
   // Create screen Layer
+#if defined(PBL_PLATFORM_CHALK)
+  s_screen_layer = layer_create(GRect(8+18, 51+6, 128, 64));
+#else
   s_screen_layer = layer_create(GRect(8, 51, 128, 64));
+#endif
   layer_set_update_proc(s_screen_layer, screen_update_proc);
 
   // Add to window  
   layer_add_child(window_layer, s_screen_layer);
 
   // Create text layer
-  s_text_layer = text_layer_create(GRect(0, 60, bounds.size.w, 50));
+  s_text_layer = text_layer_create(GRect(0, 60, bounds.size.w, 50)); //TODO for round
   text_layer_set_background_color(s_text_layer, GColorClear);
   text_layer_set_text(s_text_layer, "Loading ROM 0%");
   text_layer_set_text_alignment(s_text_layer, GTextAlignmentCenter);
