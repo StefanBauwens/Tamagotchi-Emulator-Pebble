@@ -334,7 +334,7 @@ static void icons_update_proc(Layer *layer, GContext *ctx) {
   {
     #if defined(PBL_PLATFORM_EMERY) || defined(PBL_PLATFORM_GABBRO)
     graphics_draw_bitmap_in_rect(ctx, s_bitmap_icon8, GRect(132, 125, 22, 22)); //TODO test
-    #els7
+    #else
     graphics_draw_bitmap_in_rect(ctx, s_bitmap_icon8, GRect(108, 100, 22, 18));
     #endif
   }
