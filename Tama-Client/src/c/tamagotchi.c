@@ -553,9 +553,9 @@ static void main_window_load(Window *window) {
   // Create icons layer
 #if defined(PBL_PLATFORM_CHALK)
   s_icons_layer = layer_create(GRect(0+18, 24+6, 144, 146));
-#elif defined(PBL_PLATFORM_GABBRO)
+#elif defined(PBL_PLATFORM_GABBRO) //TODO + add resized icons
   s_icons_layer = layer_create(GRect(0+58, 24+46, 144, 146));
-#elif defined(PBL_PLATFORM_EMERY)
+#elif defined(PBL_PLATFORM_EMERY) //TODO + add resized icons
   s_icons_layer = layer_create(GRect(0+28, 24+30, 144, 146));
 #else
   s_icons_layer = layer_create(GRect(0, 24, 144, 146));
@@ -569,9 +569,9 @@ static void main_window_load(Window *window) {
 #if defined(PBL_PLATFORM_CHALK)
   s_screen_layer = layer_create(GRect(8+18, 51+6, 128, 64));
 #elif defined(PBL_PLATFORM_GABBRO)
-  s_screen_layer = layer_create(GRect(8+58, 51+46, 128, 64));
+  s_screen_layer = layer_create(GRect(50, 90, 160, 80));
 #elif defined(PBL_PLATFORM_EMERY)
-  s_screen_layer = layer_create(GRect(8+28, 51+30, 128, 64));
+  s_screen_layer = layer_create(GRect(20, 74, 160, 80));
 #else
   s_screen_layer = layer_create(GRect(8, 51, 128, 64));
 #endif
