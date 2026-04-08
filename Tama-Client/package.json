@@ -46,6 +46,14 @@
                     "type": "bitmap"
                 },
                 {
+                    "file": "images/bgGabbro.png",
+                    "name": "BG_IMAGE_GABBRO",
+                    "type": "bitmap",
+                    "targetPlatforms": [
+                        "gabbro"
+                    ]
+                },
+                {
                     "file": "images/bgChalk.png",
                     "name": "BG_IMAGE_CHALK",
                     "type": "bitmap"

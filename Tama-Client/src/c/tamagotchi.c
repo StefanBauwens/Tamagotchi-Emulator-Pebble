@@ -509,6 +509,8 @@ static void main_window_load(Window *window) {
 #if defined(PBL_COLOR)
   #if defined(PBL_PLATFORM_CHALK)
   s_bitmap_bg = gbitmap_create_with_resource(RESOURCE_ID_BG_IMAGE_CHALK);
+  #elif defined(PBL_PLATFORM_GABBRO)
+  s_bitmap_bg = gbitmap_create_with_resource(RESOURCE_ID_BG_IMAGE_GABBRO);
   #else
   s_bitmap_bg = gbitmap_create_with_resource(RESOURCE_ID_BG_IMAGE);
   #endif
@@ -519,6 +521,8 @@ static void main_window_load(Window *window) {
   // Create background layer
 #if defined(PBL_PLATFORM_CHALK)
   s_background_layer = bitmap_layer_create(GRect(0, 0, 180, 180));
+#elif defined(PBL_PLATFORM_GABBRO)
+    s_background_layer = bitmap_layer_create(GRect(0, 0, 260, 260));
 #else
   s_background_layer = bitmap_layer_create(GRect(0, 0, 144, 168));
 #endif
