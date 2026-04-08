@@ -1,3 +1,11 @@
+// TODO
+// Fix pebble round
+// Make pebble 2 round work nicely + maybe show shell + scale up
+// Make pebble time 2 work nicely + scale up + shell?
+// do we show unlit lcd slightly on ccolor watches? semi transparent?
+// Improve loading to maybe pixelated progress bar?
+// Show also error if no connection with watch!!
+
 #define bitRead(value, bit) (((value) >> (bit)) & 0x01)
 #define FPS 30
 #define FPS_DELAY 1000/FPS //ms
@@ -505,7 +513,11 @@ static void main_window_load(Window *window) {
 #endif
 
   // Create background layer
+#if defined(PBL_PLATFORM_CHALK)
+  s_background_layer = bitmap_layer_create(GRect(0, 0, 180, 180));
+#else
   s_background_layer = bitmap_layer_create(GRect(0, 0, 144, 168));
+#endif
   bitmap_layer_set_compositing_mode(s_background_layer, GCompOpSet);
   bitmap_layer_set_bitmap(s_background_layer, s_bitmap_bg);
 
