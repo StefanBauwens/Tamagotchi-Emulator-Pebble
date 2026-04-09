@@ -30,6 +30,7 @@ static BitmapLayer *s_background_layer;
 static Layer *s_screen_layer;
 static Layer *s_icons_layer;
 static TextLayer *s_text_layer;
+//static GFont s_lcd_font;
 
 // Bitmaps
 static GBitmap *s_bitmap_bg;
@@ -594,6 +595,9 @@ static void main_window_load(Window *window) {
   // Add to window  
   layer_add_child(window_layer, s_screen_layer);
 
+  // Font
+  //s_lcd_font    = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_SMALL_LCD_9));
+
   // Create text layer
   #if defined(PBL_PLATFORM_CHALK)
   s_text_layer = text_layer_create(GRect(0, 60+6, bounds.size.w, 50));  //TODO check
@@ -605,6 +609,7 @@ static void main_window_load(Window *window) {
   s_text_layer = text_layer_create(GRect(0, 60, bounds.size.w, 50)); 
   #endif
   text_layer_set_background_color(s_text_layer, GColorClear);
+  //text_layer_set_font(s_text_layer, s_lcd_font);
   text_layer_set_text(s_text_layer, "Loading ROM 0%");
   text_layer_set_text_alignment(s_text_layer, GTextAlignmentCenter);
   text_layer_set_overflow_mode(s_text_layer, GTextOverflowModeWordWrap);
@@ -624,6 +629,9 @@ static void main_window_unload(Window *window) {
 
   // Destroy text layer
   text_layer_destroy(s_text_layer);
+
+  // Unload font
+  //fonts_unload_custom_font(s_lcd_font);
 
   // Destroy icon bitmaps
   gbitmap_destroy(s_bitmap_icon1);
