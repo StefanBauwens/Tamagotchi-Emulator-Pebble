@@ -1,9 +1,5 @@
 // TODO
-// Fix pebble round
-// Improve loading to maybe pixelated progress bar?
 // Show also error if no connection with watch!!
-// Show error if bad rom url
-// Make clay settings page
 // Tell user fetching save file from server/ syncing with server
 // Make source public + add readme
 
