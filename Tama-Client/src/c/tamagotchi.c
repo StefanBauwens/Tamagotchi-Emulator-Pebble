@@ -5,7 +5,7 @@
 // Show error if bad rom url
 // Make clay settings page
 // Tell user fetching save file from server/ syncing with server
-// Change basalt bg?
+// Make source public + add readme
 
 #define bitRead(value, bit) (((value) >> (bit)) & 0x01)
 #define FPS 30

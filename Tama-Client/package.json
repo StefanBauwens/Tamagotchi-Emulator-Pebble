@@ -1,6 +1,8 @@
 {
     "author": "Stefan Bauwens",
-    "dependencies": {},
+    "dependencies": {
+        "@rebble/clay": "^1.0.8"
+    },
     "keywords": [
         "pebble-app"
     ],
@@ -35,7 +37,10 @@
             "STATEmemory",
             "STATEnone",
             "STATEselected_icon",
-            "STATEshowing_attention_icon"
+            "STATEshowing_attention_icon",
+            "ROMUrl",
+            "APIServerUrl",
+            "APIServerKey"
         ],
         "projectType": "native",
         "resources": {
@@ -257,7 +262,10 @@
         "uuid": "ea6c2440-8359-41db-b6cf-064522429ce1",
         "watchapp": {
             "watchface": false
-        }
+        },
+        "capabilities": [
+            "configurable"
+        ]
     },
     "version": "1.0.0"
 }

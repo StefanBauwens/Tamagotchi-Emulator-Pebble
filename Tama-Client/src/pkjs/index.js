@@ -9,6 +9,14 @@ const TIMEOUT_MS = 1000;
 const ROM_KEY = "ROM";
 const LAST_STATE_KEY = "LAST_STATE";
 
+// Import the Clay package
+var Clay = require('@rebble/clay');
+// Load our Clay configuration file
+var clayConfig = require('./config');
+// Initialize Clay
+var clay = new Clay(clayConfig);
+
+
 var xhrRequest = function (url, type, callback) {
     var xhr = new XMLHttpRequest();
     xhr.onload = function () {
