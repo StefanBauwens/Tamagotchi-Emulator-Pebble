@@ -26,7 +26,7 @@ module.exports = [
         "type": "input",
         "messageKey": "ROMUrl",
         "label": "ROM URL",
-        "defaultValue": "",
+        "defaultValue": "https://pastebin.com/raw/iN0pfyr7",
         "attributes": {
           "placeholder": "Try https://pastebin.com/raw/iN0pfyr7"
         }

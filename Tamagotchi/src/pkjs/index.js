@@ -8,31 +8,59 @@ var runningXHRRequests = 0;
 const TIMEOUT_MS = 1000;
 const ROM_KEY = "ROM";
 const LAST_STATE_KEY = "LAST_STATE";
+const APISERVER_KEY = "APISERVER";
+const APIKEY_KEY = "APIKEY";
+const ROMURL_KEY = "ROMURL";
+
 
 // Import the Clay package
 var Clay = require('@rebble/clay');
 // Load our Clay configuration file
 var clayConfig = require('./config');
 // Initialize Clay
-var clay = new Clay(clayConfig);
+var clay = new Clay(clayConfig, null, {autoHandleEvents: false});
 
+var xhrRequest = function (url, type, callback, errorCallback) {
+  var xhr = new XMLHttpRequest();
 
-var xhrRequest = function (url, type, callback) {
-    var xhr = new XMLHttpRequest();
-    xhr.onload = function () {
-      callback(this.responseText);
-    };
-    xhr.open(type, url);
-    xhr.send();
+  xhr.onload = function () {
+    if (xhr.status >= 200 && xhr.status < 300) {
+      // Success
+      callback(xhr.responseText);
+    } else {
+      // Server responded but with an error status
+      if (errorCallback) {
+        errorCallback(xhr.status, xhr.responseText);
+      }
+    }
+  };
+
+  xhr.onerror = function () {
+    // Network-level error (no response)
+    if (errorCallback) {
+      errorCallback('network_error', null);
+    }
+  };
+
+  xhr.open(type, url);
+  xhr.send();
 };
 
 function FetchROM()
 {
+    if(localStorage.getItem(ROMURL_KEY) === null)
+    {
+        Pebble.sendAppMessage({'JSMessage': "No ROM url found!"});
+        return;
+    }
+
     console.log("Fetching ROM..."); //TODO error handling timeout
+
     if (localStorage.getItem(ROM_KEY) === null)
     {
         console.log("Does not yet exist in local storage so fetching...");
-        xhrRequest('https://pastebin.com/raw/iN0pfyr7', 'GET', OnReceiveRomText); //TODO let user input this rom
+        xhrRequest(localStorage.getItem(ROMURL_KEY), 'GET', OnReceiveRomText, OnErrorFetchingRom);
+        //xhrRequest('https://pastebin.com/raw/iN0pfyr7', 'GET', OnReceiveRomText); //TODO let user input this rom
     }
     else
     {
@@ -42,12 +70,26 @@ function FetchROM()
         SendROM(buffer);
     }
 
+    function OnErrorFetchingRom(error, response)
+    {
+        console.log("Error fetching rom: " + error + " response: " + response);
+        Pebble.sendAppMessage({'JSMessage': "Error fetching ROM!"});
+        return;
+    }
+
     function OnReceiveRomText(ROMText)
     {
         console.log("Received ROM text and parsing to array...");
 
         let stringArray = ROMText.split(", ");
         let values = stringArray.map(s => parseInt(s, 16)); // convert to integers
+        console.log("values length: " + values.length);
+        if (values.length !== 6144) // exact length of P1 rom
+        {
+            console.log("Incorrect ROM!");
+            Pebble.sendAppMessage({'JSMessage': "Incorrect ROM!"});
+            return;
+        }
 
         let buffer = new Uint8Array(values.length * 2); // use 2 bytes for each value
         for (let i = 0; i < values.length; i++) {
@@ -106,7 +148,7 @@ function SendSaveState()
     if (localStorage.getItem(LAST_STATE_KEY) !== null)
     {
         console.log("Save file found js. Sending...");
-        Pebble.sendAppMessage(JSON.parse(localStorage.getItem(LAST_STATE_KEY)));
+        Pebble.sendAppMessage(JSON.parse(localStorage.getItem(LAST_STATE_KEY))); //TODO handle failed to send
         console.log("Save file sent!");
     }
     else
@@ -141,3 +183,35 @@ Pebble.addEventListener('appmessage', function(e) {
         console.log("Saved last state to js localstorage...");
     }
   });
+
+// We need to implement this since we are overriding events in webviewclosed
+Pebble.addEventListener('showConfiguration', 
+    function(e) {
+        clay.config = clayConfig;
+        Pebble.openURL(clay.generateUrl());
+    }
+);
+
+// Listen for when web view is closed
+Pebble.addEventListener('webviewclosed',
+    function(e) {
+        if (e && !e.response) { return; }
+
+        let prevRomUrl = localStorage.getItem(ROMURL_KEY);
+    
+        var dict = clay.getSettings(e.response);
+        //console.log("dict stingified: " + JSON.stringify(dict));
+
+        localStorage.setItem(APISERVER_KEY, dict[messageKeys.APIServerUrl]);
+        localStorage.setItem(APIKEY_KEY, dict[messageKeys.APIServerKey]);
+        localStorage.setItem(ROMURL_KEY, dict[messageKeys.ROMUrl]);
+
+        if (prevRomUrl !== dict[messageKeys.ROMUrl])
+        {
+            console.log("ROM url changed");
+            localStorage.removeItem(ROM_KEY); // remove cached ROM
+            FetchROM();
+        }
+        //console.log("Getting values: " + localStorage.getItem("APISERVER") + " " + localStorage.getItem("APIKEY") + " " + localStorage.getItem("ROMURL"));
+    }
+);

@@ -404,6 +404,14 @@ static void prv_inbox_received_handler(DictionaryIterator *iter, void *context) 
     }
   }
 
+  // Handle error messages
+  Tuple *JSMessage_t = dict_find(iter, MESSAGE_KEY_JSMessage);
+  if (JSMessage_t)
+  {
+    char *jsMessage = JSMessage_t->value->cstring;
+    text_layer_set_text(s_text_layer, jsMessage);
+  }
+  
   // Handle incoming save state
   Tuple *STATEnone_t = dict_find(iter, MESSAGE_KEY_STATEnone);
 

@@ -40,7 +40,8 @@
             "STATEshowing_attention_icon",
             "ROMUrl",
             "APIServerUrl",
-            "APIServerKey"
+            "APIServerKey",
+            "JSMessage"
         ],
         "projectType": "native",
         "resources": {
