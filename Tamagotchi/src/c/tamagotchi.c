@@ -595,7 +595,15 @@ static void main_window_load(Window *window) {
   layer_add_child(window_layer, s_screen_layer);
 
   // Create text layer
-  s_text_layer = text_layer_create(GRect(0, 60, bounds.size.w, 50)); //TODO for round but we'll probably change?
+  #if defined(PBL_PLATFORM_CHALK)
+  s_text_layer = text_layer_create(GRect(0, 60+6, bounds.size.w, 50));  //TODO check
+  #elif defined(PBL_PLATFORM_GABBRO)
+  s_text_layer = text_layer_create(GRect(0, 60+46, bounds.size.w, 50)); //TODO TODO
+  #elif defined(PBL_PLATFORM_EMERY)
+  s_text_layer = text_layer_create(GRect(0, 60+30, bounds.size.w, 50));  //TODO TODO
+  #else   
+  s_text_layer = text_layer_create(GRect(0, 60, bounds.size.w, 50)); 
+  #endif
   text_layer_set_background_color(s_text_layer, GColorClear);
   text_layer_set_text(s_text_layer, "Loading ROM 0%");
   text_layer_set_text_alignment(s_text_layer, GTextAlignmentCenter);
