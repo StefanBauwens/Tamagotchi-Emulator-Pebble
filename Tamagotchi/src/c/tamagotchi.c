@@ -10,6 +10,7 @@
 // Why does clock not stay when loading save from server?? (local save seems to work fine) -> release buttons issue?
 // tell user to check configuration (when no rom for example)
 // fix 500 error with post
+// add reset button in configuration
 
 #define bitRead(value, bit) (((value) >> (bit)) & 0x01)
 #define FPS 30
