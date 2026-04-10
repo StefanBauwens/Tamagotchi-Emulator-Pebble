@@ -49,7 +49,13 @@ module.exports = [
         "messageKey": "APIServerKey",
         "label": "API Key",
         "defaultValue": "",
-      },  
+      }, 
+      {
+        "type": "toggle",
+        "messageKey": "reset_tamagotchi",
+        "label": "Reset Tamagotchi on Save",
+        "defaultValue": false
+      }
     ]
   },
   {

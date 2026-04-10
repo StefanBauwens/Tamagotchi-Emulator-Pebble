@@ -41,7 +41,8 @@
             "ROMUrl",
             "APIServerUrl",
             "APIServerKey",
-            "JSMessage"
+            "JSMessage",
+            "reset_tamagotchi"
         ],
         "projectType": "native",
         "resources": {

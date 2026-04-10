@@ -3,10 +3,10 @@
 // Make a flow chart for readme?
 // Make icons work correctly from server
 // Why does clock not stay when loading save from server?? (local save seems to work fine) -> release buttons issue?
-// tell user to check configuration (when no rom for example)
-// add reset button in configuration
 // Write readme for docker
 // add api key to dockerfile?
+// do we properly retry sending appmessages?
+// decrease app logs
 
 #define bitRead(value, bit) (((value) >> (bit)) & 0x01)
 #define FPS 30
@@ -370,6 +370,18 @@ static void prv_inbox_received_handler(DictionaryIterator *iter, void *context) 
     APP_LOG(APP_LOG_LEVEL_DEBUG, "js ready received");
     text_layer_set_text(s_text_layer, "Loading ROM 0%");
   }
+
+  Tuple *reset_tamagotchi_t = dict_find(iter, MESSAGE_KEY_reset_tamagotchi);
+  if (reset_tamagotchi_t)
+  {
+    if (s_hasReceivedRom)
+    {
+      s_clearTextLayerOnScreenRefresh = true;
+      s_hasReceivedSaveFile = false;
+      initTamalib();
+    }
+  }
+  
 
   // handle incoming rom
   Tuple *offset_t = dict_find(iter, MESSAGE_KEY_ROMOffset);

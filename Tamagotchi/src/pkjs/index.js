@@ -252,6 +252,10 @@ Pebble.addEventListener('showConfiguration',
     function(e) {
         clay.config = clayConfig;
         Pebble.openURL(clay.generateUrl());
+
+        document.addEventListener('click', function(e) { //TODO test
+            console.log(e.target);
+        });
     }
 );
 
@@ -274,6 +278,14 @@ Pebble.addEventListener('webviewclosed',
             console.log("ROM url changed");
             localStorage.removeItem(ROM_KEY); // remove cached ROM
             FetchROM();
+        }
+
+        if(dict[messageKeys.reset_tamagotchi] == true)
+        {
+            clay.setSettings("reset_tamagotchi", false);
+            console.log("Reset tamagotchi requested"); 
+            localStorage.removeItem(LAST_STATE_KEY); // delete save file
+            Pebble.sendAppMessage({'reset_tamagotchi': 1}); // tell watch to reset
         }
         //console.log("Getting values: " + localStorage.getItem("APISERVER") + " " + localStorage.getItem("APIKEY") + " " + localStorage.getItem("ROMURL"));
     }
