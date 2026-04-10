@@ -366,10 +366,11 @@ static void prv_inbox_received_handler(DictionaryIterator *iter, void *context) 
 
   Tuple *ready_tuple_t = dict_find(iter, MESSAGE_KEY_JSReady);
 
-  if(ready_tuple_t) {
+  if(ready_tuple_t && !s_js_ready) {
     // PebbleKit JS is ready! Safe to send messages
     s_js_ready = true;
     APP_LOG(APP_LOG_LEVEL_DEBUG, "js ready received");
+    text_layer_set_text(s_text_layer, "Loading ROM 0%");
   }
 
   // handle incoming rom
@@ -611,7 +612,7 @@ static void main_window_load(Window *window) {
   #endif
   text_layer_set_background_color(s_text_layer, GColorClear);
   //text_layer_set_font(s_text_layer, s_lcd_font);
-  text_layer_set_text(s_text_layer, "Loading ROM 0%");
+  text_layer_set_text(s_text_layer, "Waiting for phone...");
   text_layer_set_text_alignment(s_text_layer, GTextAlignmentCenter);
   text_layer_set_overflow_mode(s_text_layer, GTextOverflowModeWordWrap);
   layer_add_child(window_layer, text_layer_get_layer(s_text_layer));
