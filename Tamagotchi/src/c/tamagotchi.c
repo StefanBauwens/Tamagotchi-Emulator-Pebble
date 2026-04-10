@@ -2,6 +2,11 @@
 // Show also error if no connection with watch!!
 // Tell user fetching save file from server/ syncing with server
 // Make source public + add readme
+// don't save files if tamalib not running yet. It means something went wrong and then we'll overwrite our good save!
+// Make text layer less wide so it wraps nicely for longer messages
+// Make a flow chart for readme
+// add logs to config page somehow? Eventual warnings to say server is unreachable?
+
 
 #define bitRead(value, bit) (((value) >> (bit)) & 0x01)
 #define FPS 30

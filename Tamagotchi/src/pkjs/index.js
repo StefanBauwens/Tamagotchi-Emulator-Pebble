@@ -20,8 +20,10 @@ var clayConfig = require('./config');
 // Initialize Clay
 var clay = new Clay(clayConfig, null, {autoHandleEvents: false});
 
-var xhrRequest = function (url, type, data, callback, errorCallback) {
+var xhrRequest = function (url, type, data, callback, errorCallback, timeout = 10000) {
   var xhr = new XMLHttpRequest();
+
+  xhr.timeout = timeout; // in milliseconds (10s default)
 
   xhr.onload = function () {
     if (xhr.status >= 200 && xhr.status < 300) {
@@ -36,6 +38,12 @@ var xhrRequest = function (url, type, data, callback, errorCallback) {
   xhr.onerror = function () {
     if (errorCallback) {
       errorCallback('network_error', null);
+    }
+  };
+
+  xhr.ontimeout = function () {
+    if (errorCallback) {
+      errorCallback('timeout', null);
     }
   };
 
@@ -144,19 +152,54 @@ function SendROM(buffer) {
 
 function SendSaveStateToWatch() // Send last save state back to watch
 {
-    if(localStorage.getItem(APISERVER_KEY) !== null)
+    if(localStorage.getItem(APISERVER_KEY) !== null && localStorage.getItem(APISERVER_KEY).trim().length !== 0)
     {
+        Pebble.sendAppMessage({'JSMessage': "Fetching state..."});
         xhrRequest(localStorage.getItem(APISERVER_KEY) + "/state", 'GET', null, 
         (responseText) => { // success
             console.log("Successfully fetched save state from server: " + responseText);
-            //TODO parse it
-            SendSaveFromLocalStorage(); //TODO TODO temp temp
+            // parse it
+            let serverState = JSON.parse(responseText);
+            let parsedDict = {
+                'STATEpc': serverState.pc,
+                'STATEx': serverState.x,
+                'STATEy': serverState.y,
+                'STATEa': serverState.a,
+                'STATEb': serverState.b,
+                'STATEnp': serverState.np,
+                'STATEsp': serverState.sp,
+                'STATEflags': serverState.flags,
+                'STATEtick_counter': serverState.tick_counter,
+                'STATEclk_timer_timestamp': serverState.clk_timer_timestamp,
+                'STATEprog_timer_timestamp': serverState.prog_timer_timestamp,
+                'STATEprog_timer_enabled': serverState.prog_timer_enabled,
+                'STATEprog_timer_data': serverState.prog_timer_data,
+                'STATEprog_timer_rld': serverState.prog_timer_rld,
+                'STATEcall_depth': serverState.call_depth,
+                'STATEinterrupts': [
+                    serverState.interrupts[0].factor_flag_reg, serverState.interrupts[0].mask_reg, serverState.interrupts[0].triggered, serverState.interrupts[0].vector,
+                    serverState.interrupts[1].factor_flag_reg, serverState.interrupts[1].mask_reg, serverState.interrupts[1].triggered, serverState.interrupts[1].vector,
+                    serverState.interrupts[2].factor_flag_reg, serverState.interrupts[2].mask_reg, serverState.interrupts[2].triggered, serverState.interrupts[2].vector,
+                    serverState.interrupts[3].factor_flag_reg, serverState.interrupts[3].mask_reg, serverState.interrupts[3].triggered, serverState.interrupts[3].vector,
+                    serverState.interrupts[4].factor_flag_reg, serverState.interrupts[4].mask_reg, serverState.interrupts[4].triggered, serverState.interrupts[4].vector,
+                    serverState.interrupts[5].factor_flag_reg, serverState.interrupts[5].mask_reg, serverState.interrupts[5].triggered, serverState.interrupts[5].vector,
+                ],
+                'STATEmemory': serverState.memory,
+                'STATEselected_icon': -1, //TODO let server provide this
+                'STATEshowing_attention_icon': 0 //TODO // let server provide this
+            };
+            console.log("Parsed value: " + JSON.stringify(parsedDict)); //TODO
+            console.log("State in memory: " + localStorage.getItem(LAST_STATE_KEY)); //TODO 
+
+            console.log("Sending save file from server to watch...");
+            Pebble.sendAppMessage(parsedDict); //TODO handle failed to send
 
         }, 
         (error, response) => { // fail
+            Pebble.sendAppMessage({'JSMessage': "Server fail!"});
             console.log("Failed to fetch from server. Using last save as backup. Error: " + error);
             SendSaveFromLocalStorage();
-        });
+        }, 5000);
     }
     else
     {
@@ -238,6 +281,9 @@ Pebble.addEventListener('webviewclosed',
 
 function SaveStateAfterClosingApp(saveStateDict)
 {
+    //TODO temp
+    //saveStateDict = {"STATEpc":26,"STATEx":125,"STATEy":525,"STATEa":0,"STATEb":1,"STATEnp":0,"STATEsp":242,"STATEflags":3,"STATEtick_counter":32674418,"STATEclk_timer_timestamp":32669696,"STATEprog_timer_timestamp":32674396,"STATEprog_timer_enabled":1,"STATEprog_timer_data":3,"STATEprog_timer_rld":7,"STATEcall_depth":3,"STATEinterrupts":[0,1,0,12,0,0,0,10,0,0,0,8,7,0,0,6,0,0,0,4,0,8,0,2],"STATEmemory":[48,0,15,18,136,0,0,0,57,20,20,0,0,0,0,0,0,0,0,0,0,0,0,81,62,174,8,125,6,148,15,12,196,0,0,5,0,240,0,0,0,0,0,16,240,5,16,17,0,1,203,0,20,177,20,21,12,16,15,168,1,240,15,6,1,5,8,0,0,0,0,0,255,28,255,28,29,255,29,255,0,127,80,43,63,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,119,113,23,119,113,23,125,112,23,125,119,1,134,4,216,144,248,46,5,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,60,122,110,110,122,60,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3,1,255,6,0,0,16,2,51,192,80,31,0,0,0,0,0,0,0,0,0,0,0,0,255,255,3,4,45,192,5,5,60,240,128,17,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,60,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,60,122,110,110,122,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,8,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,4,1,33,0,0,0],"STATEselected_icon":-1,"STATEshowing_attention_icon":0};
+    
     localStorage.setItem(LAST_STATE_KEY, JSON.stringify(saveStateDict));
     console.log("Saved last state to js localstorage...");
 
@@ -269,7 +315,7 @@ function SaveStateAfterClosingApp(saveStateDict)
                 {"factor_flag_reg":saveStateDict.STATEinterrupts[20],"mask_reg":saveStateDict.STATEinterrupts[21],"triggered":saveStateDict.STATEinterrupts[22],"vector":saveStateDict.STATEinterrupts[23]}
             ],
             'memory': saveStateDict.STATEmemory
-        };
+        }; //TODO handle selected icon and attention icon
 
         xhrRequest(localStorage.getItem(APISERVER_KEY) + "/state", 'POST', payload,
         (responseText) => { // success
