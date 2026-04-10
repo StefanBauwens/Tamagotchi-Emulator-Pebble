@@ -6,7 +6,9 @@
 // Make text layer less wide so it wraps nicely for longer messages
 // Make a flow chart for readme
 // add logs to config page somehow? Eventual warnings to say server is unreachable?
-
+// Make icons work correctly from server
+// Why does clock not stay when loading save from server?? (local save seems to work fine) -> release buttons issue?
+// tell user to check configuration (when no rom for example)
 
 #define bitRead(value, bit) (((value) >> (bit)) & 0x01)
 #define FPS 30
@@ -601,11 +603,11 @@ static void main_window_load(Window *window) {
 
   // Create text layer
   #if defined(PBL_PLATFORM_CHALK)
-  s_text_layer = text_layer_create(GRect(0, 60+6, bounds.size.w, 50));  //TODO check
+  s_text_layer = text_layer_create(GRect(0, 60+6, bounds.size.w, 50)); 
   #elif defined(PBL_PLATFORM_GABBRO)
-  s_text_layer = text_layer_create(GRect(0, 60+46, bounds.size.w, 50)); //TODO TODO
+  s_text_layer = text_layer_create(GRect(0, 60+46, bounds.size.w, 50));
   #elif defined(PBL_PLATFORM_EMERY)
-  s_text_layer = text_layer_create(GRect(0, 60+30, bounds.size.w, 50));  //TODO TODO
+  s_text_layer = text_layer_create(GRect(0, 60+30, bounds.size.w, 50));
   #else   
   s_text_layer = text_layer_create(GRect(0, 60, bounds.size.w, 50)); 
   #endif
@@ -619,8 +621,6 @@ static void main_window_load(Window *window) {
   // Sub to ticks
   milli_tick_handler = app_timer_register(STEP_DELAY, milli_tick, NULL);
   screen_tick_handler = app_timer_register(FPS_DELAY, screen_tick, NULL);
-
-  //TODO: handle screen when app starts, show pixelated loading screen? send message that pebble app is open? i guess js know that
 }
 
 static void main_window_unload(Window *window) {
