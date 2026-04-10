@@ -20,15 +20,13 @@ var clayConfig = require('./config');
 // Initialize Clay
 var clay = new Clay(clayConfig, null, {autoHandleEvents: false});
 
-var xhrRequest = function (url, type, callback, errorCallback) {
+var xhrRequest = function (url, type, data, callback, errorCallback) {
   var xhr = new XMLHttpRequest();
 
   xhr.onload = function () {
     if (xhr.status >= 200 && xhr.status < 300) {
-      // Success
       callback(xhr.responseText);
     } else {
-      // Server responded but with an error status
       if (errorCallback) {
         errorCallback(xhr.status, xhr.responseText);
       }
@@ -36,14 +34,20 @@ var xhrRequest = function (url, type, callback, errorCallback) {
   };
 
   xhr.onerror = function () {
-    // Network-level error (no response)
     if (errorCallback) {
       errorCallback('network_error', null);
     }
   };
 
   xhr.open(type, url);
-  xhr.send();
+
+  // Set JSON header if sending data
+  if (data) {
+    xhr.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
+    xhr.send(JSON.stringify(data));
+  } else {
+    xhr.send();
+  }
 };
 
 function FetchROM()
@@ -54,13 +58,12 @@ function FetchROM()
         return;
     }
 
-    console.log("Fetching ROM..."); //TODO error handling timeout
+    console.log("Fetching ROM...");
 
     if (localStorage.getItem(ROM_KEY) === null)
     {
         console.log("Does not yet exist in local storage so fetching...");
-        xhrRequest(localStorage.getItem(ROMURL_KEY), 'GET', OnReceiveRomText, OnErrorFetchingRom);
-        //xhrRequest('https://pastebin.com/raw/iN0pfyr7', 'GET', OnReceiveRomText); //TODO let user input this rom
+        xhrRequest(localStorage.getItem(ROMURL_KEY), 'GET', null, OnReceiveRomText, OnErrorFetchingRom);
     }
     else
     {
@@ -116,7 +119,7 @@ function SendROM(buffer) {
         if (offset >= data.length) 
         {
             console.log("Finished sending ROM!");
-            SendSaveState();
+            SendSaveStateToWatch();
             return;
         }
 
@@ -139,12 +142,30 @@ function SendROM(buffer) {
     }
 }
 
-function SendSaveState()
+function SendSaveStateToWatch() // Send last save state back to watch
 {
-    // for testing on emulator
-    //let saveFileDict = {"STATEpc":26,"STATEx":125,"STATEy":525,"STATEa":0,"STATEb":1,"STATEnp":0,"STATEsp":242,"STATEflags":3,"STATEtick_counter":32674418,"STATEclk_timer_timestamp":32669696,"STATEprog_timer_timestamp":32674396,"STATEprog_timer_enabled":1,"STATEprog_timer_data":3,"STATEprog_timer_rld":7,"STATEcall_depth":3,"STATEinterrupts":[0,1,0,12,0,0,0,10,0,0,0,8,7,0,0,6,0,0,0,4,0,8,0,2],"STATEmemory":[48,0,15,18,136,0,0,0,57,20,20,0,0,0,0,0,0,0,0,0,0,0,0,81,62,174,8,125,6,148,15,12,196,0,0,5,0,240,0,0,0,0,0,16,240,5,16,17,0,1,203,0,20,177,20,21,12,16,15,168,1,240,15,6,1,5,8,0,0,0,0,0,255,28,255,28,29,255,29,255,0,127,80,43,63,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,119,113,23,119,113,23,125,112,23,125,119,1,134,4,216,144,248,46,5,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,60,122,110,110,122,60,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3,1,255,6,0,0,16,2,51,192,80,31,0,0,0,0,0,0,0,0,0,0,0,0,255,255,3,4,45,192,5,5,60,240,128,17,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,60,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,60,122,110,110,122,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,8,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,4,1,33,0,0,0],"STATEselected_icon":-1,"STATEshowing_attention_icon":0};
-    //localStorage.setItem(LAST_STATE_KEY, JSON.stringify(saveFileDict));
+    if(localStorage.getItem(APISERVER_KEY) !== null)
+    {
+        xhrRequest(localStorage.getItem(APISERVER_KEY) + "/state", 'GET', null, 
+        (responseText) => { // success
+            console.log("Successfully fetched save state from server: " + responseText);
+            //TODO parse it
+            SendSaveFromLocalStorage(); //TODO TODO temp temp
 
+        }, 
+        (error, response) => { // fail
+            console.log("Failed to fetch from server. Using last save as backup. Error: " + error);
+            SendSaveFromLocalStorage();
+        });
+    }
+    else
+    {
+       SendSaveFromLocalStorage();
+    }
+}
+
+ function SendSaveFromLocalStorage()
+ {
     if (localStorage.getItem(LAST_STATE_KEY) !== null)
     {
         console.log("Save file found js. Sending...");
@@ -156,7 +177,7 @@ function SendSaveState()
         console.log("No save file!");
         Pebble.sendAppMessage({'STATEnone': 1});
     }
-}
+ }
 
 // Listen for when the watchface is opened
 Pebble.addEventListener('ready', 
@@ -179,8 +200,7 @@ Pebble.addEventListener('appmessage', function(e) {
 
     if ('STATEpc' in dict)
     {
-        localStorage.setItem(LAST_STATE_KEY, JSON.stringify(dict));
-        console.log("Saved last state to js localstorage...");
+        SaveStateAfterClosingApp(dict);
     }
   });
 
@@ -215,3 +235,48 @@ Pebble.addEventListener('webviewclosed',
         //console.log("Getting values: " + localStorage.getItem("APISERVER") + " " + localStorage.getItem("APIKEY") + " " + localStorage.getItem("ROMURL"));
     }
 );
+
+function SaveStateAfterClosingApp(saveStateDict)
+{
+    localStorage.setItem(LAST_STATE_KEY, JSON.stringify(saveStateDict));
+    console.log("Saved last state to js localstorage...");
+
+    if(localStorage.getItem(APISERVER_KEY) !== null)
+    {
+        console.log("Sending save to server as well..."); //TODO
+        let payload = {
+            'pc': saveStateDict.STATEpc,
+            'x': saveStateDict.STATEx,
+            'y': saveStateDict.STATEy,
+            'a': saveStateDict.STATEa,
+            'b': saveStateDict.STATEb,
+            'np': saveStateDict.STATEnp,
+            'sp': saveStateDict.STATEsp,
+            'flags': saveStateDict.STATEflags,
+            'tick_counter': saveStateDict.STATEtick_counter,
+            'clk_timer_timestamp': saveStateDict.STATEclk_timer_timestamp,
+            'prog_timer_timestamp': saveStateDict.STATEprog_timer_timestamp,
+            'prog_timer_enabled': saveStateDict.STATEprog_timer_enabled,
+            'prog_timer_data': saveStateDict.STATEprog_timer_data,
+            'prog_timer_rld': saveStateDict.STATEprog_timer_rld,
+            'call_depth': saveStateDict.STATEcall_depth,
+            'interrupts': [
+                {"factor_flag_reg":saveStateDict.STATEinterrupts[0],"mask_reg":saveStateDict.STATEinterrupts[1],"triggered":saveStateDict.STATEinterrupts[2],"vector":saveStateDict.STATEinterrupts[3]},
+                {"factor_flag_reg":saveStateDict.STATEinterrupts[4],"mask_reg":saveStateDict.STATEinterrupts[5],"triggered":saveStateDict.STATEinterrupts[6],"vector":saveStateDict.STATEinterrupts[7]},
+                {"factor_flag_reg":saveStateDict.STATEinterrupts[8],"mask_reg":saveStateDict.STATEinterrupts[9],"triggered":saveStateDict.STATEinterrupts[10],"vector":saveStateDict.STATEinterrupts[11]},
+                {"factor_flag_reg":saveStateDict.STATEinterrupts[12],"mask_reg":saveStateDict.STATEinterrupts[13],"triggered":saveStateDict.STATEinterrupts[14],"vector":saveStateDict.STATEinterrupts[15]},
+                {"factor_flag_reg":saveStateDict.STATEinterrupts[16],"mask_reg":saveStateDict.STATEinterrupts[17],"triggered":saveStateDict.STATEinterrupts[18],"vector":saveStateDict.STATEinterrupts[19]},
+                {"factor_flag_reg":saveStateDict.STATEinterrupts[20],"mask_reg":saveStateDict.STATEinterrupts[21],"triggered":saveStateDict.STATEinterrupts[22],"vector":saveStateDict.STATEinterrupts[23]}
+            ],
+            'memory': saveStateDict.STATEmemory
+        };
+
+        xhrRequest(localStorage.getItem(APISERVER_KEY) + "/state", 'POST', payload,
+        (responseText) => { // success
+            console.log("Successfully sent save state to server: " + responseText);
+        }, 
+        (error, response) => { // fail
+            console.log("Failed to send data to server. Error: " + error);
+        });
+    }
+}
