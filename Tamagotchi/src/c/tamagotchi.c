@@ -1,16 +1,14 @@
 // TODO
-// Show also error if no connection with watch!!
-// Tell user fetching save file from server/ syncing with server
+// Show also error if no connection with watch!! -> if no jsReady received
 // Make source public + add readme
-// don't save files if tamalib not running yet. It means something went wrong and then we'll overwrite our good save!
-// Make text layer less wide so it wraps nicely for longer messages
 // Make a flow chart for readme
 // add logs to config page somehow? Eventual warnings to say server is unreachable?
 // Make icons work correctly from server
 // Why does clock not stay when loading save from server?? (local save seems to work fine) -> release buttons issue?
 // tell user to check configuration (when no rom for example)
-// fix 500 error with post
 // add reset button in configuration
+// Write readme for docker
+// add api key to dockerfile?
 
 #define bitRead(value, bit) (((value) >> (bit)) & 0x01)
 #define FPS 30
@@ -55,7 +53,6 @@ static int8_t s_selectedIcon = -1; // -1 is none, 0-6 says what icon
 static bool s_showingAttentionIcon = false;
 static bool s_js_ready;
 static bool s_pixelsChanged = false;
-static uint32_t s_saveStateKey = 32; 
 
 static bool_t s_screen_buffer[LCD_HEIGHT][LCD_WIDTH] = {{0}};
 static u12_t g_program[6144] = {0};
@@ -535,7 +532,6 @@ static void prv_inbox_received_handler(DictionaryIterator *iter, void *context) 
 static void main_window_load(Window *window) {
   // Get information about the Window
   Layer *window_layer = window_get_root_layer(window);
-  GRect bounds = layer_get_bounds(window_layer);
 
   // Create GBitmap for background 
 #if defined(PBL_COLOR)
@@ -605,13 +601,13 @@ static void main_window_load(Window *window) {
 
   // Create text layer
   #if defined(PBL_PLATFORM_CHALK)
-  s_text_layer = text_layer_create(GRect(0, 60+6, bounds.size.w, 50)); 
+  s_text_layer = text_layer_create(GRect(6+18, 60+6, 128, 50)); 
   #elif defined(PBL_PLATFORM_GABBRO)
-  s_text_layer = text_layer_create(GRect(0, 60+46, bounds.size.w, 50));
+  s_text_layer = text_layer_create(GRect(50, 60+46, 158, 50));
   #elif defined(PBL_PLATFORM_EMERY)
-  s_text_layer = text_layer_create(GRect(0, 60+30, bounds.size.w, 50));
+  s_text_layer = text_layer_create(GRect(20, 60+30, 158, 50));
   #else   
-  s_text_layer = text_layer_create(GRect(0, 60, bounds.size.w, 50)); 
+  s_text_layer = text_layer_create(GRect(6, 60, 128, 50)); 
   #endif
   text_layer_set_background_color(s_text_layer, GColorClear);
   //text_layer_set_font(s_text_layer, s_lcd_font);
