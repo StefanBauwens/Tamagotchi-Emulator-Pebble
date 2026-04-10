@@ -33,7 +33,7 @@ module.exports = [
       },  
       {
         "type": "text",
-        "defaultValue": "(Optional) Tamagotchi Server for running in background"
+        "defaultValue": "(Optional) Tamagotchi Server for running in background. Leave blank if not used."
       },
       {
         "type": "input",

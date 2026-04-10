@@ -60,9 +60,9 @@ var xhrRequest = function (url, type, data, callback, errorCallback, timeout = 1
 
 function FetchROM()
 {
-    if(localStorage.getItem(ROMURL_KEY) === null)
+    if(localStorage.getItem(ROMURL_KEY) === null || localStorage.getItem(ROMURL_KEY).trim().length === 0)
     {
-        Pebble.sendAppMessage({'JSMessage': "No ROM url found!"});
+        Pebble.sendAppMessage({'JSMessage': "No ROM url found! Check app settings!"});
         return;
     }
 

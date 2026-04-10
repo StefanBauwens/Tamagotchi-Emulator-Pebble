@@ -1,8 +1,6 @@
 // TODO
-// Show also error if no connection with watch!! -> if no jsReady received
 // Make source public + add readme
-// Make a flow chart for readme
-// add logs to config page somehow? Eventual warnings to say server is unreachable?
+// Make a flow chart for readme?
 // Make icons work correctly from server
 // Why does clock not stay when loading save from server?? (local save seems to work fine) -> release buttons issue?
 // tell user to check configuration (when no rom for example)
