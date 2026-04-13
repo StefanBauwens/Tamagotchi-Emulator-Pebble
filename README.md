@@ -7,8 +7,8 @@ Powered by [TamaLib](https://github.com/jcrona/tamalib/).
 ![Tamagotchi watchapp screenshot monochrome](Tamagotchi/screenshots/Duo2.png)
 ![Tamagotchi watchapp screenshot monochrome](Tamagotchi/screenshots/Duo3.png)
 
-![Tamagotchi watchapp screenshot emery](Tamagotchi/screenshots/emery.png)
 ![Tamagotchi watchapp screenshot chalk](Tamagotchi/screenshots/chalk.png)
+![Tamagotchi watchapp screenshot emery](Tamagotchi/screenshots/emery.png)
 ![Tamagotchi watchapp screenshot gabbro](Tamagotchi/screenshots/gabbro1.png)
 
 ## Features & Updates:
