@@ -2,8 +2,12 @@
 Tamagotchi P1 emulator for the Pebble watch, created for the Spring 2026 Pebble Contest.
 Powered by [TamaLib](https://github.com/jcrona/tamalib/).
 
-![Tamagotchi watchapp screenshot](Tamagotchi/TODO.png)
-![Tamagotchi monochrome watchapp screenshot](Tamagotchi/TODO.png)
+![Tamagotchi watchapp screenshot basalt](Tamagotchi/screenshots/basalt.png)
+![Tamagotchi watchapp screenshot basalt](Tamagotchi/screenshots/basalt1.png)
+![Tamagotchi watchapp screenshot emery](Tamagotchi/screenshots/emery.png)
+![Tamagotchi watchapp screenshot gabbro](Tamagotchi/screenshots/gabbro1.png)
+![Tamagotchi watchapp screenshot monochrome](Tamagotchi/duo2.png)
+![Tamagotchi watchapp screenshot monochrome](Tamagotchi/duo3.png)
 
 ## Features & Updates:
 v1.0:
