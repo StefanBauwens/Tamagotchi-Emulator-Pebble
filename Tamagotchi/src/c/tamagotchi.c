@@ -1,7 +1,3 @@
-// TODO
-// Make sourceS public + add readme (+ make flowchart?) + talk about reporting issues
-// add api key to dockerfile?
-
 #define bitRead(value, bit) (((value) >> (bit)) & 0x01)
 #define FPS 30
 #define FPS_DELAY 1000/FPS //ms

@@ -6,7 +6,7 @@
     "keywords": [
         "pebble-app"
     ],
-    "name": "tamagotchi",
+    "name": "TE4P",
     "pebble": {
         "displayName": "Tamagotchi",
         "enableMultiJS": true,

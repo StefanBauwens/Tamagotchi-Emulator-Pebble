@@ -289,7 +289,6 @@ Pebble.addEventListener('webviewclosed',
         var dict = clay.getSettings(e.response);
 
         localStorage.setItem(APISERVER_KEY, dict[messageKeys.APIServerUrl]);
-        localStorage.setItem(APIKEY_KEY, dict[messageKeys.APIServerKey]);
         localStorage.setItem(ROMURL_KEY, dict[messageKeys.ROMUrl]);
 
         if (prevRomUrl !== dict[messageKeys.ROMUrl])

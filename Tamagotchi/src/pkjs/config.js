@@ -1,7 +1,7 @@
 module.exports = [
   { 
     "type": "heading", 
-    "defaultValue": "Tamagotchi" 
+    "defaultValue": "Tamagotchi Emu 4 Pebble" 
   }, 
   { 
     "type": "text", 
@@ -9,7 +9,7 @@ module.exports = [
   },
   { 
     "type": "text", 
-    "defaultValue": "For more info check the readme at https://github.com/StefanBauwens/Tamagotchi-Emulator-Pebble" 
+    "defaultValue": "For more info check the readme at <a href='https://github.com/StefanBauwens/Tamagotchi-Emulator-Pebble'>https://github.com/StefanBauwens/Tamagotchi-Emulator-Pebble</a>" 
   },
   {
     "type": "section",
@@ -26,9 +26,9 @@ module.exports = [
         "type": "input",
         "messageKey": "ROMUrl",
         "label": "ROM URL",
-        "defaultValue": "https://pastebin.com/raw/iN0pfyr7",
+        "defaultValue": "",
         "attributes": {
-          "placeholder": "Try https://pastebin.com/raw/iN0pfyr7"
+          "placeholder": "See github readme!"
         }
       },  
       {
@@ -41,15 +41,9 @@ module.exports = [
         "label": "Server",
         "defaultValue": "",
         "attributes": {
-          "placeholder": "e.g. http://localhost:3535"
+          "placeholder": "e.g. http://192.168.0.100:5000"
         }
-      },  
-      {
-        "type": "input",
-        "messageKey": "APIServerKey",
-        "label": "API Key",
-        "defaultValue": "",
-      }, 
+      },
       {
         "type": "toggle",
         "messageKey": "reset_tamagotchi",

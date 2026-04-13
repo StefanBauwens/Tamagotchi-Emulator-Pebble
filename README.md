@@ -1,19 +1,37 @@
-# Tamagotchi Emulator Pebble
-Tamagotchi P1 emulator for the Pebble watch (Time (Steel), Time Round, Pebble 2 (Duo), Time 2, Round 2).
-Created for the Spring 2026 Pebble Contest.
+# Tamagotchi Emulator 4 Pebble
+Tamagotchi P1 emulator for the Pebble watch, created for the Spring 2026 Pebble Contest.
+Powered by [TamaLib](https://github.com/jcrona/tamalib/).
 
 ![Tamagotchi watchapp screenshot](Tamagotchi/TODO.png)
 ![Tamagotchi monochrome watchapp screenshot](Tamagotchi/TODO.png)
 
 ## Features & Updates:
 v1.0:
-- TODO
+- Tamagotchi P1 Emulation
+- Support for external ROM integration (via Settings page)
+- State saving & loading on closing/opening watchapp
+- Support for [Tamagotchi API Server](https://github.com/StefanBauwens/Tamagotchi-API) 
+- Support for Time (Steel), Time Round, Pebble 2 (Duo), Time 2 and Round 2.
 
-## Getting a ROM
-TODO
+## Getting a ROM url
+To run this Emulator it will need a Tamagotchi P1 rom in u12_t format. I am not allowed to distribute this with the app, but it is possible for you to add a link to this type of rom in text format in settings. Luckily for you it seems a link like that already seems to exist: https://pastebin.com/raw/iN0pfyr
+Thank you to the kind person for creating this!
 
 ## Server for running in background (optional)
-TODO
+By default the Tamagotchi will save its state when quitting the app and restore it the next time you use it. 
+
+It works fine like this but if you would like your tamagotchi to continue working in the backround you can make use of my [Tamagotchi API Service](https://github.com/StefanBauwens/Tamagotchi-API) and run it on your own server. 
+
+Once set up, when you close the app your save state is sent to your server and continues to live on there. When you open the watch app next time, the save state is fetched from the server and runs on the Pebble again. 
+
+## How to use
+You can look up the original instructions for the Tamagotchi P1 toy. 
+A, B and C buttons are mapped to UP, SELECT and DOWN buttons respectively. Pressing the BACK button saves the state and quits the app.
+
+## Issues
+I've created this with support for most Pebble watches, but have only tested this on a Pebble 2 Duo so far. The emulator on CloudPebble seemed to work fine and so I hope it's also the case with the actual watches. If any major bugs are noticed feel free to create an issue here on Github!
 
 ## Credits
-This project implements [TamaLib](https://github.com/jcrona/tamalib/) by [jcrona](https://github.com/jcrona). I also want to point out that jcrona has created [PebbleGotchi](https://github.com/jcrona/pebblegotchi) about 5 years ago. I believe my implementation to be significantly different to warrant my own publication in the store. In fact PebbleGotchi was never uploaded to the Pebble store as it required the end user to recompile and supply it with a ROM. My implementation allows the user to supply a URL to a ROM file in the configuration page. I've also done the work of porting [TamaLib to Javascript](https://github.com/StefanBauwens/tamalib-js) which has allowed me to create a hostable server tool which can let you keep your Tamagotchi running in the background while the Tamagotchi app is not running on your Pebble.
+This project implements [TamaLib](https://github.com/jcrona/tamalib/) by [jcrona](https://github.com/jcrona). I also want to point out that jcrona has created [PebbleGotchi](https://github.com/jcrona/pebblegotchi) about 5 years ago. 
+
+I believe my implementation to be significantly different to warrant my own publication in the store. In fact PebbleGotchi was never uploaded to the Pebble store as it required the end user to recompile and supply it with a ROM. 
