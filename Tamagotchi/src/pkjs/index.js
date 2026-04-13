@@ -185,8 +185,8 @@ function SendSaveStateToWatch() // Send last save state back to watch
                     serverState.interrupts[5].factor_flag_reg, serverState.interrupts[5].mask_reg, serverState.interrupts[5].triggered, serverState.interrupts[5].vector,
                 ],
                 'STATEmemory': serverState.memory,
-                'STATEselected_icon': -1, //TODO let server provide this
-                'STATEshowing_attention_icon': 0 //TODO // let server provide this
+                'STATEselected_icon': serverState.selected_icon,
+                'STATEshowing_attention_icon': serverState.showing_attention_icon
             };
             console.log("Parsed value: " + JSON.stringify(parsedDict)); //TODO
             console.log("State in memory: " + localStorage.getItem(LAST_STATE_KEY)); //TODO 
