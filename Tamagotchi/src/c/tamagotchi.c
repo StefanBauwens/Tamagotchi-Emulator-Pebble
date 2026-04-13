@@ -1,12 +1,14 @@
 // TODO
 // Make source public + add readme (+ make flowchart?)
 // Make icons work correctly from server (discrepency?)
-// Why does clock not stay when loading save from server?? (local save seems to work fine) -> release buttons issue?
 // Write readme for docker
 // add api key to dockerfile?
 // add rom url to dockerfile?
 // do we properly retry sending appmessages?
 // decrease app logs
+// double check if server runs at 100% correct time speed
+// try to crash pebble with button presses and then see if you can fix it
+
 
 #define bitRead(value, bit) (((value) >> (bit)) & 0x01)
 #define FPS 30
@@ -25,6 +27,7 @@
 //#include "rom.h" 
 
 static void initTamalib(void); 
+static void saveCurrentStateAndQuit();
 
 static Window *s_main_window;
 static BitmapLayer *s_background_layer;
@@ -62,6 +65,11 @@ static flat_state_t stateToLoad = {0};
 //ticks
 static AppTimer *milli_tick_handler;
 static AppTimer *screen_tick_handler;
+
+static void Quit()
+{
+  window_stack_pop_all(false);
+}
 
 /*****************************/
 /*   START HAL T FUNCTIONS   */
@@ -247,6 +255,7 @@ static void on_button_down_press(ClickRecognizerRef recognizer, void *context) /
   tamalib_set_button(BTN_RIGHT, BTN_STATE_PRESSED);
 }
 
+
 // Button releases
 static void on_button_up_release(ClickRecognizerRef recognizer, void *context) //4
 {
@@ -264,11 +273,19 @@ static void on_button_down_release(ClickRecognizerRef recognizer, void *context)
   tamalib_set_button(BTN_RIGHT, BTN_STATE_RELEASED);
 }
 
+static void on_button_back(ClickRecognizerRef recognizer, void *context) //back
+{
+   // Handle saving state and save
+  saveCurrentStateAndQuit(); 
+}
+
 static void click_config_provider(void *context) {
   // subscribe to button presses here
   window_raw_click_subscribe(BUTTON_ID_UP, on_button_up_press, on_button_up_release, NULL);
   window_raw_click_subscribe(BUTTON_ID_SELECT, on_button_select_press, on_button_select_release, NULL);
   window_raw_click_subscribe(BUTTON_ID_DOWN, on_button_down_press, on_button_down_release, NULL);
+  
+  window_single_click_subscribe(BUTTON_ID_BACK, on_button_back);
 }
 
 // Handles drawing icons layers
@@ -418,14 +435,20 @@ static void prv_inbox_received_handler(DictionaryIterator *iter, void *context) 
     }
   }
 
-  // Handle error messages
+  // Handle (error) messages
   Tuple *JSMessage_t = dict_find(iter, MESSAGE_KEY_JSMessage);
   if (JSMessage_t)
   {
     char *jsMessage = JSMessage_t->value->cstring;
     text_layer_set_text(s_text_layer, jsMessage);
   }
-  
+
+  Tuple *JSFinishedSaving_t = dict_find(iter, MESSAGE_KEY_JSFinishedSaving);
+  if (JSFinishedSaving_t)
+  {
+    Quit(); // we quit gracefully
+  }
+
   // Handle incoming save state
   Tuple *STATEnone_t = dict_find(iter, MESSAGE_KEY_STATEnone);
 
@@ -710,18 +733,16 @@ static void init() { //TODO show error when no connection to phone can be made!
   window_set_click_config_provider(s_main_window, click_config_provider);
 }
 
-static void saveCurrentState()
+static void saveCurrentStateAndQuit()
 {
-  if (!s_hasReceivedRom) return; // no point in sending save if we don't even have the rom yet.
+  if (!s_hasReceivedRom)
+  {
+     Quit(); // no point in sending save if we don't even have the rom yet.
+  }
+
+  text_layer_set_text(s_text_layer, "Saving state...");
   
   APP_LOG(APP_LOG_LEVEL_DEBUG, "Getting save file and sending to phone...");
-
-  // send to phone? Is this possible since it's async and stuff?
-  if(!s_js_ready)
-  {
-    APP_LOG(APP_LOG_LEVEL_WARNING, "JS is not yet ready to receive messages!"); // warn user!
-    return;
-  }
 
   // Send save file to phone 
   flat_state_t saveState = cpu_get_flat_state();
@@ -774,22 +795,24 @@ static void saveCurrentState()
     // Check the result
     if(result != APP_MSG_OK) {
       APP_LOG(APP_LOG_LEVEL_ERROR, "Error sending the outbox: %d", (int)result);
+      text_layer_set_text(s_text_layer, "Can't send state!"); //TODO handle better
+      Quit();
     }
     else
     {
       APP_LOG(APP_LOG_LEVEL_DEBUG, "Save file sent successfully to phone!");
+      //TODO wait for response from js to quit
     }
   } else {
     // The outbox cannot be used right now
     APP_LOG(APP_LOG_LEVEL_ERROR, "Error preparing the outbox: %d", (int)result);
+    text_layer_set_text(s_text_layer, "Can't send state!"); //TODO handle better
+    Quit();
   }
 }
 
 static void deinit() {
   window_destroy(s_main_window);
-
-  // Handle saving state
-  saveCurrentState();
 
   // Release tamalib
   tamalib_release();

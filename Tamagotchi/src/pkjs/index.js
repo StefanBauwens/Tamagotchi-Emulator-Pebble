@@ -347,9 +347,15 @@ function SaveStateAfterClosingApp(saveStateDict)
         xhrRequest(localStorage.getItem(APISERVER_KEY) + "/state", 'POST', payload,
         (responseText) => { // success
             console.log("Successfully sent save state to server: " + responseText);
+            Pebble.sendAppMessage({'JSMessage': "Saved to server!", 'JSFinishedSaving': 1}); // tell watch to finish quitting
         }, 
         (error, response) => { // fail
             console.log("Failed to send data to server. Error: " + error + "Response: " + response);
+            Pebble.sendAppMessage({'JSMessage': "Saving to server failed!", 'JSFinishedSaving': 1}); // tell watch to finish quitting //TODO retry?
         });
+    }
+    else
+    {
+        Pebble.sendAppMessage({'JSMessage': "Saved!", 'JSFinishedSaving': 1}); // tell watch we saved and it can quit now
     }
 }

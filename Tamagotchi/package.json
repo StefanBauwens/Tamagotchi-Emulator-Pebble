@@ -42,7 +42,8 @@
             "APIServerUrl",
             "APIServerKey",
             "JSMessage",
-            "reset_tamagotchi"
+            "reset_tamagotchi",
+            "JSFinishedSaving"
         ],
         "projectType": "native",
         "resources": {
