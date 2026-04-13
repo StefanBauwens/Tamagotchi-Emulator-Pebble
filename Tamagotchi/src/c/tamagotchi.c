@@ -4,8 +4,8 @@
 // add api key to dockerfile?
 // add rom url to dockerfile?
 // do we properly retry sending appmessages?
-// decrease app logs
 // double check if server runs at 100% correct time speed
+// Saving state -> add white background or something when showing this message?
 
 #define bitRead(value, bit) (((value) >> (bit)) & 0x01)
 #define FPS 30
@@ -230,6 +230,7 @@ static void screen_tick() //runs every 33 ms for about 30fps
 
   if (s_clearTextLayerOnScreenRefresh)
   {
+    s_clearTextLayerOnScreenRefresh = false;
     text_layer_set_text(s_text_layer, " ");
   }
   screen_tick_handler = app_timer_register(FPS_DELAY, screen_tick, NULL);
@@ -381,7 +382,6 @@ static void prv_inbox_received_handler(DictionaryIterator *iter, void *context) 
   if(ready_tuple_t && !s_js_ready) {
     // PebbleKit JS is ready! Safe to send messages
     s_js_ready = true;
-    APP_LOG(APP_LOG_LEVEL_DEBUG, "js ready received");
     text_layer_set_text(s_text_layer, "Loading ROM 0%");
   }
 
@@ -554,8 +554,6 @@ static void prv_inbox_received_handler(DictionaryIterator *iter, void *context) 
       s_selectedIcon = STATEselected_icon_t->value->int8;
       s_showingAttentionIcon = STATEshowing_attention_icon_t->value->int8;
 
-      APP_LOG(APP_LOG_LEVEL_DEBUG, "Setting selected icon: %d ", s_selectedIcon);
-
       layer_mark_dirty(s_icons_layer);
     }
 
@@ -692,9 +690,8 @@ static void initTamalib() {
   tamalib_register_hal(&hal);
 
   // Check for save file
-  APP_LOG(APP_LOG_LEVEL_DEBUG, "Checking for save file");
   if (s_hasReceivedSaveFile) {
-    APP_LOG(APP_LOG_LEVEL_DEBUG, "Save state found.Loading...");
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "Save state found. Loading...");
 
     cpu_init_from_state(g_program, &stateToLoad, NULL, 1000000);
     set_screen_to_last_state(stateToLoad.memory); 
@@ -708,7 +705,7 @@ static void initTamalib() {
   }
 }
 
-static void init() { //TODO show error when no connection to phone can be made!
+static void init() {
   // Create main Window element and assign to pointer
   s_main_window = window_create();
 
@@ -801,7 +798,7 @@ static void saveCurrentStateAndQuit()
     else
     {
       APP_LOG(APP_LOG_LEVEL_DEBUG, "Save file sent successfully to phone!");
-      //TODO wait for response from js to quit
+      //now will wait for response from js to quit
     }
   } else {
     // The outbox cannot be used right now

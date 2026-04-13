@@ -1,11 +1,5 @@
 var messageKeys = require('message_keys');
-var screenArray = new Uint8Array(74).fill(128);
 
-var stateTest = true;
-var runningXHRRequests = 0;
-//var lastButtonState = "0";
-
-const TIMEOUT_MS = 1000;
 const ROM_KEY = "ROM";
 const LAST_STATE_KEY = "LAST_STATE";
 const APISERVER_KEY = "APISERVER";
@@ -94,7 +88,6 @@ function FetchROM()
 
         let stringArray = ROMText.split(", ");
         let values = stringArray.map(s => parseInt(s, 16)); // convert to integers
-        console.log("values length: " + values.length);
         if (values.length !== 6144) // exact length of P1 rom
         {
             console.log("Incorrect ROM!");
@@ -197,9 +190,7 @@ function SendSaveStateToWatch() // Send last save state back to watch
                 'STATEselected_icon': serverState.selected_icon,
                 'STATEshowing_attention_icon': serverState.showing_attention_icon
             };
-            console.log("Parsed value: " + JSON.stringify(parsedDict)); //TODO
-            console.log("State in memory: " + localStorage.getItem(LAST_STATE_KEY)); //TODO 
-
+            
             console.log("Sending save file from server to watch....");
             SendDictRetrying(parsedDict);
 
@@ -234,8 +225,6 @@ function SendDictRetrying(dict)
     {
         console.log("Save file found js. Sending...");
         SendDictRetrying(JSON.parse(localStorage.getItem(LAST_STATE_KEY)));
-        //Pebble.sendAppMessage(JSON.parse(localStorage.getItem(LAST_STATE_KEY))); //TODO handle failed to send
-        console.log("Save file sent!");
     }
     else
     {
@@ -252,8 +241,6 @@ Pebble.addEventListener('ready',
         // Update s_js_ready on watch
         Pebble.sendAppMessage({'JSReady': 1});
 
-        //localStorage.clear(); //TODO temp
-        //setTimeout(FetchROM, 3000); //TODO test
         FetchROM();
     }   
 );
@@ -274,10 +261,6 @@ Pebble.addEventListener('showConfiguration',
     function(e) {
         clay.config = clayConfig;
         Pebble.openURL(clay.generateUrl());
-
-        document.addEventListener('click', function(e) { //TODO test
-            console.log(e.target);
-        });
     }
 );
 
@@ -289,7 +272,6 @@ Pebble.addEventListener('webviewclosed',
         let prevRomUrl = localStorage.getItem(ROMURL_KEY);
     
         var dict = clay.getSettings(e.response);
-        //console.log("dict stingified: " + JSON.stringify(dict));
 
         localStorage.setItem(APISERVER_KEY, dict[messageKeys.APIServerUrl]);
         localStorage.setItem(APIKEY_KEY, dict[messageKeys.APIServerKey]);
@@ -309,7 +291,6 @@ Pebble.addEventListener('webviewclosed',
             localStorage.removeItem(LAST_STATE_KEY); // delete save file
             Pebble.sendAppMessage({'reset_tamagotchi': 1}); // tell watch to reset
         }
-        //console.log("Getting values: " + localStorage.getItem("APISERVER") + " " + localStorage.getItem("APIKEY") + " " + localStorage.getItem("ROMURL"));
     }
 );
 
@@ -325,7 +306,7 @@ function SaveStateAfterClosingApp(saveStateDict)
 
     if(localStorage.getItem(APISERVER_KEY) !== null)
     {
-        console.log("Sending save to server as well..."); //TODO
+        console.log("Sending save to server as well...");
         let payload = {
             'pc': saveStateDict.STATEpc,
             'x': saveStateDict.STATEx,
