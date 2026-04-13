@@ -144,7 +144,7 @@ function SendROM(buffer) {
         },
         function() { // on fail
             console.log("Failed to send chunk! Retrying...");
-            setTimeout(sendNextChunk(data), 100); 
+            setTimeout(() => { sendNextChunk(data) }, 100); 
         }
         );
     }
@@ -191,8 +191,8 @@ function SendSaveStateToWatch() // Send last save state back to watch
             console.log("Parsed value: " + JSON.stringify(parsedDict)); //TODO
             console.log("State in memory: " + localStorage.getItem(LAST_STATE_KEY)); //TODO 
 
-            console.log("Sending save file from server to watch...");
-            Pebble.sendAppMessage(parsedDict); //TODO handle failed to send
+            console.log("Sending save file from server to watch....");
+            SendDictRetrying(parsedDict);
 
         }, 
         (error, response) => { // fail
@@ -207,12 +207,25 @@ function SendSaveStateToWatch() // Send last save state back to watch
     }
 }
 
+function SendDictRetrying(dict)
+{
+    Pebble.sendAppMessage(dict, 
+    () => { console.log("Success"), 
+    () => { // on fail
+        console.log("Retrying...");
+        setTimeout(() => {
+            SendDictRetrying(dict);
+        }, 100); 
+    }}); 
+}
+
  function SendSaveFromLocalStorage()
  {
     if (localStorage.getItem(LAST_STATE_KEY) !== null)
     {
         console.log("Save file found js. Sending...");
-        Pebble.sendAppMessage(JSON.parse(localStorage.getItem(LAST_STATE_KEY))); //TODO handle failed to send
+        SendDictRetrying(JSON.parse(localStorage.getItem(LAST_STATE_KEY)));
+        //Pebble.sendAppMessage(JSON.parse(localStorage.getItem(LAST_STATE_KEY))); //TODO handle failed to send
         console.log("Save file sent!");
     }
     else

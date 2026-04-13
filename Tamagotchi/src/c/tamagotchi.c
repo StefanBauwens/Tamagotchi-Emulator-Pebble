@@ -1,10 +1,10 @@
 // TODO
-// Make source public + add readme
-// Make a flow chart for readme?
-// Make icons work correctly from server
+// Make source public + add readme (+ make flowchart?)
+// Make icons work correctly from server (discrepency?)
 // Why does clock not stay when loading save from server?? (local save seems to work fine) -> release buttons issue?
 // Write readme for docker
 // add api key to dockerfile?
+// add rom url to dockerfile?
 // do we properly retry sending appmessages?
 // decrease app logs
 
