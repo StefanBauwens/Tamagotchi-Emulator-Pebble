@@ -5,7 +5,6 @@
 // add rom url to dockerfile?
 // do we properly retry sending appmessages?
 // double check if server runs at 100% correct time speed
-// Saving state -> add white background or something when showing this message?
 
 #define bitRead(value, bit) (((value) >> (bit)) & 0x01)
 #define FPS 30
@@ -66,6 +65,12 @@ static AppTimer *screen_tick_handler;
 static void Quit()
 {
   window_stack_pop_all(false);
+}
+
+static void Message(const char * text) // Write message to screen
+{
+    layer_set_hidden((Layer *)s_screen_layer, true); // hide screen layer so we can read text
+    text_layer_set_text(s_text_layer, text);
 }
 
 /*****************************/
@@ -218,10 +223,10 @@ static void milli_tick() //runs once every ms.
         tamalib_step();
     } 
   } 
-  milli_tick_handler = app_timer_register(STEP_DELAY, milli_tick, NULL); //calls itself in 1ms
+  milli_tick_handler = app_timer_register(STEP_DELAY, milli_tick, NULL); // calls itself in 1ms
 }
 
-static void screen_tick() //runs every 33 ms for about 30fps
+static void screen_tick() // runs every 33 ms for about 30fps
 {
   if (s_hasReceivedRom && s_hasReceivedSaveFile)
   {
@@ -231,7 +236,8 @@ static void screen_tick() //runs every 33 ms for about 30fps
   if (s_clearTextLayerOnScreenRefresh)
   {
     s_clearTextLayerOnScreenRefresh = false;
-    text_layer_set_text(s_text_layer, " ");
+    Message(" ");
+    layer_set_hidden((Layer *)s_screen_layer, false); // unhide screen layer
   }
   screen_tick_handler = app_timer_register(FPS_DELAY, screen_tick, NULL);
 }
@@ -382,7 +388,7 @@ static void prv_inbox_received_handler(DictionaryIterator *iter, void *context) 
   if(ready_tuple_t && !s_js_ready) {
     // PebbleKit JS is ready! Safe to send messages
     s_js_ready = true;
-    text_layer_set_text(s_text_layer, "Loading ROM 0%");
+    Message("Loading ROM 0%");
   }
 
   Tuple *reset_tamagotchi_t = dict_find(iter, MESSAGE_KEY_reset_tamagotchi);
@@ -420,12 +426,12 @@ static void prv_inbox_received_handler(DictionaryIterator *iter, void *context) 
         static char progress_text[25];
         int percentage = (offset * 100)/12288;
         snprintf(progress_text, sizeof(progress_text), "Loading ROM %d%%", percentage);
-        text_layer_set_text(s_text_layer, progress_text);
+        Message(progress_text);
     }
     if (index == 6143)
     {
       // we reached the end and can safely start now
-      text_layer_set_text(s_text_layer, "Loading ROM 100%");
+      Message("Loading ROM 100%");
       APP_LOG(APP_LOG_LEVEL_DEBUG, "Reached end of ROM!");
       s_hasReceivedRom = true;
       // wait for save file from js
@@ -437,7 +443,7 @@ static void prv_inbox_received_handler(DictionaryIterator *iter, void *context) 
   if (JSMessage_t)
   {
     char *jsMessage = JSMessage_t->value->cstring;
-    text_layer_set_text(s_text_layer, jsMessage);
+    Message(jsMessage);
   }
 
   Tuple *JSFinishedSaving_t = dict_find(iter, MESSAGE_KEY_JSFinishedSaving);
@@ -480,7 +486,7 @@ static void prv_inbox_received_handler(DictionaryIterator *iter, void *context) 
 
   if (STATEpc_t && STATEmemory_t) // assume whole block
   {
-    text_layer_set_text(s_text_layer, "Loading save state...");
+    Message("Loading save state...");
 
     uint16_t state_pc = STATEpc_t->value->uint16;
     uint16_t state_x = STATEx_t->value->uint16;
@@ -643,7 +649,7 @@ static void main_window_load(Window *window) {
   #endif
   text_layer_set_background_color(s_text_layer, GColorClear);
   //text_layer_set_font(s_text_layer, s_lcd_font);
-  text_layer_set_text(s_text_layer, "Waiting for phone...");
+  Message("Waiting for phone...");
   text_layer_set_text_alignment(s_text_layer, GTextAlignmentCenter);
   text_layer_set_overflow_mode(s_text_layer, GTextOverflowModeWordWrap);
   layer_add_child(window_layer, text_layer_get_layer(s_text_layer));
@@ -737,7 +743,7 @@ static void saveCurrentStateAndQuit()
      Quit(); // no point in sending save if we don't even have the rom yet.
   }
 
-  text_layer_set_text(s_text_layer, "Saving state...");
+  Message("Saving state...");
   
   APP_LOG(APP_LOG_LEVEL_DEBUG, "Getting save file and sending to phone...");
 
@@ -792,7 +798,7 @@ static void saveCurrentStateAndQuit()
     // Check the result
     if(result != APP_MSG_OK) {
       APP_LOG(APP_LOG_LEVEL_ERROR, "Error sending the outbox: %d", (int)result);
-      text_layer_set_text(s_text_layer, "Can't send state!"); //TODO handle better
+      Message("Can't send state!"); //TODO handle better
       Quit();
     }
     else
@@ -803,7 +809,7 @@ static void saveCurrentStateAndQuit()
   } else {
     // The outbox cannot be used right now
     APP_LOG(APP_LOG_LEVEL_ERROR, "Error preparing the outbox: %d", (int)result);
-    text_layer_set_text(s_text_layer, "Can't send state!"); //TODO handle better
+    Message("Can't send state!"); //TODO handle better
     Quit();
   }
 }
