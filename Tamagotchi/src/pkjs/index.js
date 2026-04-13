@@ -158,8 +158,17 @@ function SendSaveStateToWatch() // Send last save state back to watch
         xhrRequest(localStorage.getItem(APISERVER_KEY) + "/state", 'GET', null, 
         (responseText) => { // success
             console.log("Successfully fetched save state from server: " + responseText);
+
             // parse it
             let serverState = JSON.parse(responseText);
+
+            if(serverState.memory[0] === null)
+            {
+                Pebble.sendAppMessage({'JSMessage': "Empty state received. Restoring from local storage..."});
+                setTimeout(SendSaveFromLocalStorage, 2000); // add delay so we see error message
+                return;
+            }
+
             let parsedDict = {
                 'STATEpc': serverState.pc,
                 'STATEx': serverState.x,
@@ -196,8 +205,8 @@ function SendSaveStateToWatch() // Send last save state back to watch
 
         }, 
         (error, response) => { // fail
-            Pebble.sendAppMessage({'JSMessage': "Sync failed! Restoring from local storage..."});
             console.log("Failed to fetch from server. Using last save as backup. Error: " + error);
+            Pebble.sendAppMessage({'JSMessage': "Sync failed! Restoring from local storage..."});
             setTimeout(SendSaveFromLocalStorage, 2000); // add delay so we see error message
         }, 5000);
     }

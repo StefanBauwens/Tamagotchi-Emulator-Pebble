@@ -6,9 +6,6 @@
 // do we properly retry sending appmessages?
 // decrease app logs
 // double check if server runs at 100% correct time speed
-// try to crash pebble with button presses and then see if you can fix it
-// if receiving null from server just ignore it and load save from local
-
 
 #define bitRead(value, bit) (((value) >> (bit)) & 0x01)
 #define FPS 30
