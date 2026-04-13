@@ -5,6 +5,7 @@ const LAST_STATE_KEY = "LAST_STATE";
 const APISERVER_KEY = "APISERVER";
 const APIKEY_KEY = "APIKEY";
 const ROMURL_KEY = "ROMURL";
+const SERVER_SAVE_FAILED_KEY = "SERVER_SAVE_FAILED";
 
 
 // Import the Clay package
@@ -145,8 +146,22 @@ function SendROM(buffer) {
 
 function SendSaveStateToWatch() // Send last save state back to watch
 {
+    let serverSaveFailed = false;
+    if (localStorage.getItem(SERVER_SAVE_FAILED_KEY) !== null)
+    {
+        serverSaveFailed = localStorage.getItem(SERVER_SAVE_FAILED_KEY);
+        localStorage.setItem(SERVER_SAVE_FAILED_KEY, false); 
+    }
+
     if(localStorage.getItem(APISERVER_KEY) !== null && localStorage.getItem(APISERVER_KEY).trim().length !== 0)
     {
+        if (serverSaveFailed)
+        {
+            Pebble.sendAppMessage({'JSMessage': "Last server save failed so restoring from local storage..."});
+            setTimeout(SendSaveFromLocalStorage, 2000); // add delay so we see error message
+            return;
+        }
+
         Pebble.sendAppMessage({'JSMessage': "Trying to sync with server..."});
         xhrRequest(localStorage.getItem(APISERVER_KEY) + "/state", 'GET', null, 
         (responseText) => { // success
@@ -190,7 +205,7 @@ function SendSaveStateToWatch() // Send last save state back to watch
                 'STATEselected_icon': serverState.selected_icon,
                 'STATEshowing_attention_icon': serverState.showing_attention_icon
             };
-            
+
             console.log("Sending save file from server to watch....");
             SendDictRetrying(parsedDict);
 
@@ -342,6 +357,7 @@ function SaveStateAfterClosingApp(saveStateDict)
             Pebble.sendAppMessage({'JSMessage': "Saved to server!", 'JSFinishedSaving': 1}); // tell watch to finish quitting
         }, 
         (error, response) => { // fail
+            localStorage.setItem(SERVER_SAVE_FAILED_KEY, true); // keep track that this failed!
             console.log("Failed to send data to server. Error: " + error + "Response: " + response);
             Pebble.sendAppMessage({'JSMessage': "Saving to server failed!", 'JSFinishedSaving': 1}); // tell watch to finish quitting //TODO retry?
         });

@@ -1,10 +1,6 @@
 // TODO
-// Make source public + add readme (+ make flowchart?)
-// Write readme for docker
+// Make sourceS public + add readme (+ make flowchart?) + talk about reporting issues
 // add api key to dockerfile?
-// add rom url to dockerfile?
-// do we properly retry sending appmessages?
-// double check if server runs at 100% correct time speed
 
 #define bitRead(value, bit) (((value) >> (bit)) & 0x01)
 #define FPS 30
