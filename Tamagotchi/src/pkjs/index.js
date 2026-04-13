@@ -341,8 +341,10 @@ function SaveStateAfterClosingApp(saveStateDict)
                 {"factor_flag_reg":saveStateDict.STATEinterrupts[16],"mask_reg":saveStateDict.STATEinterrupts[17],"triggered":saveStateDict.STATEinterrupts[18],"vector":saveStateDict.STATEinterrupts[19]},
                 {"factor_flag_reg":saveStateDict.STATEinterrupts[20],"mask_reg":saveStateDict.STATEinterrupts[21],"triggered":saveStateDict.STATEinterrupts[22],"vector":saveStateDict.STATEinterrupts[23]}
             ],
-            'memory': saveStateDict.STATEmemory
-        }; //TODO handle selected icon and attention icon
+            'memory': saveStateDict.STATEmemory,
+            'selected_icon': saveStateDict.STATEselected_icon,
+            'showing_attention_icon': saveStateDict.STATEshowing_attention_icon
+        };
 
         xhrRequest(localStorage.getItem(APISERVER_KEY) + "/state", 'POST', payload,
         (responseText) => { // success

@@ -1,6 +1,5 @@
 // TODO
 // Make source public + add readme (+ make flowchart?)
-// Make icons work correctly from server (discrepency?)
 // Write readme for docker
 // add api key to dockerfile?
 // add rom url to dockerfile?
@@ -8,6 +7,7 @@
 // decrease app logs
 // double check if server runs at 100% correct time speed
 // try to crash pebble with button presses and then see if you can fix it
+// if receiving null from server just ignore it and load save from local
 
 
 #define bitRead(value, bit) (((value) >> (bit)) & 0x01)
@@ -556,6 +556,9 @@ static void prv_inbox_received_handler(DictionaryIterator *iter, void *context) 
     {
       s_selectedIcon = STATEselected_icon_t->value->int8;
       s_showingAttentionIcon = STATEshowing_attention_icon_t->value->int8;
+
+      APP_LOG(APP_LOG_LEVEL_DEBUG, "Setting selected icon: %d ", s_selectedIcon);
+
       layer_mark_dirty(s_icons_layer);
     }
 
