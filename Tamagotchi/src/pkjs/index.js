@@ -149,7 +149,8 @@ function SendSaveStateToWatch() // Send last save state back to watch
     let serverSaveFailed = false;
     if (localStorage.getItem(SERVER_SAVE_FAILED_KEY) !== null)
     {
-        serverSaveFailed = localStorage.getItem(SERVER_SAVE_FAILED_KEY);
+        serverSaveFailed = (localStorage.getItem(SERVER_SAVE_FAILED_KEY) == "true");
+        console.log("serversavefailed: " + serverSaveFailed);
         localStorage.setItem(SERVER_SAVE_FAILED_KEY, false); 
     }
 
