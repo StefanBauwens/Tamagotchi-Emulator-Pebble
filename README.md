@@ -1,5 +1,5 @@
 # Tamagotchi Emulator 4 Pebble
-Tamagotchi P1 emulator for the Pebble watch, created for the Spring 2026 Pebble Contest.
+Tamagotchi P1/P2 emulator for the Pebble watch, created for the Spring 2026 Pebble Contest.
 Powered by [TamaLib](https://github.com/jcrona/tamalib/).
 
 [Pebble Store Link](https://apps.repebble.com/216a0f62c6e44aac8f725e68)
@@ -15,15 +15,15 @@ Powered by [TamaLib](https://github.com/jcrona/tamalib/).
 
 ## Features & Updates:
 v1.0:
-- Tamagotchi P1 Emulation
+- Tamagotchi P1/P2 Emulation
 - Support for external ROM integration (via Settings page)
 - State saving & loading on closing/opening watchapp
 - Support for [Tamagotchi API Server](https://github.com/StefanBauwens/Tamagotchi-API) 
 - Support for Time (Steel), Time Round, Pebble 2 (Duo), Time 2 and Round 2.
 
 ## Getting a ROM url
-To run this Emulator it will need a Tamagotchi P1 rom in u12_t form in text format. I am not allowed to distribute this with the app, but it is possible for you to add a link to this in the app settings. Luckily for you it seems a link like that already has been created: https://pastebin.com/raw/iN0pfyr7
-Thank you to the kind person for creating this!
+To run this Emulator it will need a Tamagotchi P1 or P2 rom in u12_t form in text format. I am not allowed to distribute this with the app, but it is possible for you to add a link to this in the app settings. Luckily for you it seems a link like that already has been created: https://pastebin.com/raw/iN0pfyr7 for P1 or https://pastebin.com/raw/TXkwnBZA for the P2.
+Thank you to the kind person for creating these!
 
 ## Server for running in background (optional)
 By default the Tamagotchi will save its state when quitting the app and restore it the next time you use it. 
