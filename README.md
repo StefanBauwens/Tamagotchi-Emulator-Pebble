@@ -15,7 +15,14 @@ Powered by [TamaLib](https://github.com/jcrona/tamalib/).
 ![Tamagotchi watchapp screenshot gabbro](Tamagotchi/screenshots/gabbro1.png)
 
 ## Features & Updates:
-v1.0:
+v1.2.:
+- Add audio for Pebble's with speaker
+- Add vibrations for Pebble's without speaker
+
+v1.1.:
+- Fix bug where loading state from the server would continually fail in some cases
+
+v1.0.:
 - Tamagotchi P1/P2 Emulation
 - Support for external ROM integration (via Settings page)
 - State saving & loading on closing/opening watchapp
@@ -35,7 +42,9 @@ Once set up, when you close the app your save state is sent to your server and c
 
 ## How to use
 You can look up the original instructions for the Tamagotchi P1 toy. 
-A, B and C buttons are mapped to UP, SELECT and DOWN buttons respectively. Pressing the BACK button saves the state and quits the app.
+A, B and C buttons are mapped to UP, SELECT and DOWN buttons respectively. 
+Use A + C together to (un)mute audio/vibrations.
+Pressing the BACK button saves the state and quits the app.
 
 ## Issues
 I've created this with support for most Pebble watches, but have only tested this on a Pebble 2 Duo so far. The emulator on CloudPebble seemed to work fine and so I hope it's also the case with the actual watches. If any major bugs are noticed feel free to create an issue here on Github!
