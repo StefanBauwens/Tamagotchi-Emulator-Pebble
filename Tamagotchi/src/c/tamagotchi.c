@@ -114,6 +114,7 @@ static void hal_update_screen(void) //since we're not using tamalib_mainloop we 
 
 static void hal_set_lcd_matrix(u8_t x, u8_t y, bool_t val)
 {
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "setting lcd screen"); //TODO  
   s_screen_buffer[y][x] = val;
   s_pixelsChanged = true;
 }
@@ -566,6 +567,16 @@ static void prv_inbox_received_handler(DictionaryIterator *iter, void *context) 
     stateToLoad.tick_counter = state_tick_counter;
     
     //stateToLoad.clk_timer_timestamp = state_clk_timer_timestamp;
+
+    stateToLoad.clk_timer_2hz_timestamp  = state_clk_timer_2hz_timestamp;
+    stateToLoad.clk_timer_4hz_timestamp  = state_clk_timer_4hz_timestamp;
+    stateToLoad.clk_timer_8hz_timestamp  = state_clk_timer_8hz_timestamp;
+    stateToLoad.clk_timer_16hz_timestamp = state_clk_timer_16hz_timestamp; 
+    stateToLoad.clk_timer_32hz_timestamp = state_clk_timer_32hz_timestamp; 
+    stateToLoad.clk_timer_64hz_timestamp = state_clk_timer_64hz_timestamp;
+    stateToLoad.clk_timer_128hz_timestamp = state_clk_timer_128hz_timestamp;
+    stateToLoad.clk_timer_256hz_timestamp = state_clk_timer_256hz_timestamp;
+
     stateToLoad.prog_timer_timestamp = state_prog_timer_timestamp;
     stateToLoad.prog_timer_enabled = state_prog_timer_enabled;
     stateToLoad.prog_timer_data = state_prog_timer_data;
