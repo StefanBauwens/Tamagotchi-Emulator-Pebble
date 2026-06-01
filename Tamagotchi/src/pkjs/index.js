@@ -93,7 +93,7 @@ function FetchROM()
 
         let stringArray = ROMText.split(", ");
         let values = stringArray.map(s => parseInt(s, 16)); // convert to integers
-        if (values.length !== 6144 && values.length !== 8192) // 6144 exact length of a E0C6S46 (P1/P2) ROM; 8192 exact length of a E0C6S48 ROM (Angel, Digimon, Mothra...)
+        if (values.length !== 6144/* && values.length !== 8192*/) // 6144 exact length of a E0C6S46 (P1/P2) ROM; 8192 exact length of a E0C6S48 ROM (Angel, Digimon, Mothra...)
         {
             console.log("Incorrect ROM!");
             Pebble.sendAppMessage({'JSMessage': "Incorrect ROM!"});

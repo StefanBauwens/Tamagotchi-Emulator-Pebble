@@ -51,7 +51,11 @@ static VibePattern s_vibesPattern = {
 };
 
 static bool_t s_screen_buffer[LCD_HEIGHT][LCD_WIDTH] = {{0}};
+#if defined(E0C6S48_SUPPORT)
 static u12_t g_program[8192] = {0};
+#elif defined(E0C6S46_SUPPORT)
+static u12_t g_program[6144] = {0};
+#endif
 static bool s_hasReceivedRom = false;
 static bool s_hasReceivedSaveFile = false;
 static bool s_clearTextLayerOnScreenRefresh = false;
