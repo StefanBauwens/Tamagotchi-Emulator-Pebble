@@ -8,6 +8,9 @@
 #define BITS_PER_BYTE 8
 #define P1P2_ID 0xFA2
 
+// persistant storage keys
+#define AUTOSAVE_KEY 1
+
 //#undef PBL_COLOR // only used for testing B&W
 
 #include <pebble.h>
@@ -15,7 +18,9 @@
 //#include "rom.h" 
 
 static void initTamalib(void); 
-static void saveCurrentStateAndQuit();
+static void saveCurrentState(bool saveAndQuit, char *saveMessage);
+static void autosave();
+static void register_autosave();
 
 static Window *s_main_window;
 static BitmapLayer *s_background_layer;
@@ -43,7 +48,6 @@ static bool s_showingAttentionIcon = false;
 static bool s_js_ready;
 static bool s_pixelsChanged = false;
 static uint16_t s_speakerFreq = 0;
-static uint32_t s_timeSincePlayFreq = 0;
 static const uint32_t s_vibesSegments[] = { 10000 };
 static VibePattern s_vibesPattern = {
   .durations = s_vibesSegments,
@@ -61,6 +65,11 @@ static bool s_hasReceivedSaveFile = false;
 static bool s_clearTextLayerOnScreenRefresh = false;
 static bool s_tamalib_is_late = false;
 static flat_state_t stateToLoad = {0};
+
+// autosaving
+static uint8_t s_autosaveInterval = 5; // default is 5, matches default of config
+static AppTimer *autosave_handler = NULL;
+static bool s_quitAfterSaving = false;
 
 //ticks
 static AppTimer *milli_tick_handler;
@@ -200,6 +209,28 @@ static hal_t hal = {
 /*   END HAL T FUNCTIONS   */
 /***************************/
 
+static void autosave()
+{
+  saveCurrentState(false, "Autosaving...");
+  register_autosave(); // call itself at interval
+}
+
+static void register_autosave()
+{
+  if (s_autosaveInterval > 0) {
+    autosave_handler = app_timer_register(s_autosaveInterval * 60000, autosave, NULL); 
+  }
+}
+
+static void clear_autosave()
+{
+  if (autosave_handler != NULL)
+  {
+    app_timer_cancel(autosave_handler);
+    autosave_handler = NULL;
+  }
+}
+
 // TODO: Seems to only work when E0C6S48_SUPPORT is not defined. Use segment information to restore properly?
 // Will likely not work with digimon as well
 void set_screen_to_last_state(uint8_t *fullRam) { // gets screen data from memory and sets it to the screen 
@@ -320,7 +351,7 @@ static void on_button_down_release(ClickRecognizerRef recognizer, void *context)
 static void on_button_back(ClickRecognizerRef recognizer, void *context) //back
 {
    // Handle saving state and save
-  saveCurrentStateAndQuit(); 
+  saveCurrentState(true, "Saving state..."); 
 }
 
 static void click_config_provider(void *context) {
@@ -469,6 +500,22 @@ static void prv_inbox_received_handler(DictionaryIterator *iter, void *context) 
     }
   }
 
+  // handle autosave interval
+  Tuple *AutosaveInterval_t = dict_find(iter, MESSAGE_KEY_AutosaveInterval);
+  if (AutosaveInterval_t)
+  {
+    uint8_t prevAutosaveInterval = s_autosaveInterval;
+    s_autosaveInterval = AutosaveInterval_t->value->uint8;
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "Received auto save interval: %d", s_autosaveInterval);
+    if (prevAutosaveInterval != s_autosaveInterval)
+    {
+      persist_write_int(AUTOSAVE_KEY, s_autosaveInterval);
+      clear_autosave();
+      register_autosave();
+    }
+  }
+
+  // handle resetting
   Tuple *reset_tamagotchi_t = dict_find(iter, MESSAGE_KEY_reset_tamagotchi);
   if (reset_tamagotchi_t)
   {
@@ -491,7 +538,13 @@ static void prv_inbox_received_handler(DictionaryIterator *iter, void *context) 
   Tuple *JSFinishedSaving_t = dict_find(iter, MESSAGE_KEY_JSFinishedSaving);
   if (JSFinishedSaving_t)
   {
-    Quit(); // we quit gracefully
+    if (s_quitAfterSaving) {
+      Quit(); // we quit gracefully
+    } else 
+    {
+      // clear text
+      s_clearTextLayerOnScreenRefresh = true;
+    }
   }
 
   // Handle incoming save state
@@ -756,6 +809,9 @@ static void main_window_unload(Window *window) {
   // Unsubscribe to ticks
   app_timer_cancel(milli_tick_handler);
   app_timer_cancel(screen_tick_handler);
+
+  // clear autosave
+  clear_autosave();
 }
 
 static void initTamalib() {
@@ -776,6 +832,13 @@ static void initTamalib() {
     s_hasReceivedSaveFile = true;
     tamalib_init(g_program, NULL, 1000000);
   }
+
+  // start auto saving
+  if (persist_exists(AUTOSAVE_KEY)) {
+    s_autosaveInterval = persist_read_int(AUTOSAVE_KEY);
+  } 
+  clear_autosave();
+  register_autosave();
 }
 
 static void init() {
@@ -803,14 +866,25 @@ static void init() {
   window_set_click_config_provider(s_main_window, click_config_provider);
 }
 
-static void saveCurrentStateAndQuit()
+static void saveCurrentState(bool saveAndQuit, char *saveMessage)
 {
   if (!s_hasReceivedRom)
   {
-     Quit(); // no point in sending save if we don't even have the rom yet.
+    // no point in saving if we don't even have the rom yet.
+    if (saveAndQuit) {
+      Quit();
+    } else {
+      return;
+    }
   }
 
-  Message("Saving state...");
+  if (saveAndQuit)
+  {
+    // we only set it if saveAndQuit is true, since we don't want a timely autosave stopping us from exiting our app by setting this to true
+    s_quitAfterSaving = true;
+  }
+  
+  Message(saveMessage);
   
   APP_LOG(APP_LOG_LEVEL_DEBUG, "Getting save file and sending to phone...");
 
@@ -874,7 +948,11 @@ static void saveCurrentStateAndQuit()
     if(result != APP_MSG_OK) {
       APP_LOG(APP_LOG_LEVEL_ERROR, "Error sending the outbox: %d", (int)result);
       Message("Can't send state!"); //TODO handle better
-      Quit();
+      s_clearTextLayerOnScreenRefresh = true;
+      if (saveAndQuit)
+      {
+        Quit();
+      }
     }
     else
     {
@@ -885,7 +963,11 @@ static void saveCurrentStateAndQuit()
     // The outbox cannot be used right now
     APP_LOG(APP_LOG_LEVEL_ERROR, "Error preparing the outbox: %d", (int)result);
     Message("Can't send state!"); //TODO handle better
-    Quit();
+    s_clearTextLayerOnScreenRefresh = true;
+    if (saveAndQuit)
+    {
+      Quit();
+    }
   }
 }
 

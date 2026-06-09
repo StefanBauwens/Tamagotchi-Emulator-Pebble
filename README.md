@@ -15,6 +15,10 @@ Powered by [TamaLib](https://github.com/jcrona/tamalib/).
 ![Tamagotchi watchapp screenshot gabbro](Tamagotchi/screenshots/gabbro1.png)
 
 ## Features & Updates:
+v1.4.:
+- Add autosaving (with configurable interval)
+- Add extra request headers to support tama-daycare ([See PR #6](https://github.com/StefanBauwens/Tamagotchi-Emulator-Pebble/pull/6))
+
 v1.3.:
 - Bug fixes & Optimisations
 - TamaLIB update (breaking change, requires upgrading to v1.1 of Tamagotchi API if you're self hosting the service!)
