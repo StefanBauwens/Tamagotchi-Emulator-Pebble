@@ -30,7 +30,18 @@ module.exports = [
         "attributes": {
           "placeholder": "See github readme!"
         }
-      },  
+      },
+      {
+        "type": "slider",
+        "messageKey": "AutosaveInterval",
+        "defaultValue": 15,
+        "label": "Autosave interval",
+        "description": "Interval in minutes. 0 = No autosaving.",
+        "min": 0,
+        "max": 10,
+        "step": 1,
+        "defaultValue": 5
+      },
       {
         "type": "text",
         "defaultValue": "(Optional) Tamagotchi Server for running in background. Leave blank if not used."

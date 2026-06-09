@@ -336,6 +336,8 @@ Pebble.addEventListener('webviewclosed',
             localStorage.removeItem(LAST_STATE_KEY); // delete save file
             Pebble.sendAppMessage({'reset_tamagotchi': 1}); // tell watch to reset
         }
+
+        Pebble.sendAppMessage({'AutosaveInterval' : dict[messageKeys.AutosaveInterval]});
     }
 );
 
