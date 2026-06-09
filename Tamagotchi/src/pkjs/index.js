@@ -48,9 +48,18 @@ var xhrRequest = function (url, type, data, callback, errorCallback, timeout = 1
 
   xhr.open(type, url);
 
+  // Send opaque watch identifier so the API can identify your tamagotchi
+  xhr.setRequestHeader('x-pebble-id', Pebble.getWatchToken());
+
   // Set JSON header if sending data
   if (data) {
     xhr.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
+
+    // Specify which ROM we're using in the request headers if we have it
+    const romUrl = localStorage.getItem(ROMURL_KEY);
+    if (romUrl !== null && romUrl.trim().length > 0) {
+      xhr.setRequestHeader('x-rom-paste', romUrl);
+    }
     xhr.send(JSON.stringify(data));
   } else {
     xhr.send();
@@ -117,12 +126,12 @@ function SendROM(buffer) {
     console.log("Trying to send ROM...");
 
     // send chunked to watch
-    const CHUNK_SIZE = 2048; 
+    const CHUNK_SIZE = 2048;
     let offset = 0;
     sendNextChunk(buffer);
 
     function sendNextChunk(data) {
-        if (offset >= data.length) 
+        if (offset >= data.length)
         {
             console.log("Finished sending ROM!");
             SendSaveStateToWatch();
@@ -142,7 +151,7 @@ function SendROM(buffer) {
         },
         function() { // on fail
             console.log("Failed to send chunk! Retrying...");
-            setTimeout(() => { sendNextChunk(data) }, 100); 
+            setTimeout(() => { sendNextChunk(data) }, 100);
         }
         );
     }
@@ -155,7 +164,7 @@ function SendSaveStateToWatch() // Send last save state back to watch
     {
         serverSaveFailed = (localStorage.getItem(SERVER_SAVE_FAILED_KEY) == "true");
         console.log("serversavefailed: " + serverSaveFailed);
-        localStorage.setItem(SERVER_SAVE_FAILED_KEY, false); 
+        localStorage.setItem(SERVER_SAVE_FAILED_KEY, false);
     }
 
     if(localStorage.getItem(APISERVER_KEY) !== null && localStorage.getItem(APISERVER_KEY).trim().length !== 0)
@@ -168,7 +177,7 @@ function SendSaveStateToWatch() // Send last save state back to watch
         }
 
         Pebble.sendAppMessage({'JSMessage': "Trying to sync with server..."});
-        xhrRequest(localStorage.getItem(APISERVER_KEY) + "/state", 'GET', null, 
+        xhrRequest(localStorage.getItem(APISERVER_KEY) + "/state", 'GET', null,
         (responseText) => { // success
             console.log("Successfully fetched save state from server: " + responseText);
 
@@ -221,7 +230,7 @@ function SendSaveStateToWatch() // Send last save state back to watch
             console.log("Sending save file from server to watch....");
             SendDictRetrying(parsedDict);
 
-        }, 
+        },
         (error, response) => { // fail
             console.log("Failed to fetch from server. Using last save as backup. Error: " + error);
             Pebble.sendAppMessage({'JSMessage': "Sync failed! Restoring from local storage..."});
@@ -236,14 +245,14 @@ function SendSaveStateToWatch() // Send last save state back to watch
 
 function SendDictRetrying(dict)
 {
-    Pebble.sendAppMessage(dict, 
-    () => { console.log("Success"), 
+    Pebble.sendAppMessage(dict,
+    () => { console.log("Success"),
     () => { // on fail
         console.log("Retrying...");
         setTimeout(() => {
             SendDictRetrying(dict);
-        }, 100); 
-    }}); 
+        }, 100);
+    }});
 }
 
  function SendSaveFromLocalStorage()
@@ -261,7 +270,7 @@ function SendDictRetrying(dict)
  }
 
 // Listen for when the watchface is opened
-Pebble.addEventListener('ready', 
+Pebble.addEventListener('ready',
     function(e) {
         console.log('PebbleKit JS ready!');
 
@@ -279,7 +288,7 @@ Pebble.addEventListener('ready',
         }
 
         FetchROM();
-    }   
+    }
 );
 
 // Listen for appmessage
@@ -294,7 +303,7 @@ Pebble.addEventListener('appmessage', function(e) {
   });
 
 // We need to implement this since we are overriding events in webviewclosed
-Pebble.addEventListener('showConfiguration', 
+Pebble.addEventListener('showConfiguration',
     function(e) {
         clay.config = clayConfig;
         Pebble.openURL(clay.generateUrl());
@@ -307,7 +316,7 @@ Pebble.addEventListener('webviewclosed',
         if (e && !e.response) { return; }
 
         let prevRomUrl = localStorage.getItem(ROMURL_KEY);
-    
+
         var dict = clay.getSettings(e.response);
 
         localStorage.setItem(APISERVER_KEY, dict[messageKeys.APIServerUrl]);
@@ -323,7 +332,7 @@ Pebble.addEventListener('webviewclosed',
         if(dict[messageKeys.reset_tamagotchi] == true)
         {
             clay.setSettings("reset_tamagotchi", false);
-            console.log("Reset tamagotchi requested"); 
+            console.log("Reset tamagotchi requested");
             localStorage.removeItem(LAST_STATE_KEY); // delete save file
             Pebble.sendAppMessage({'reset_tamagotchi': 1}); // tell watch to reset
         }
@@ -336,7 +345,7 @@ function SaveStateAfterClosingApp(saveStateDict)
     //saveStateDict = {"STATEpc":26,"STATEx":125,"STATEy":525,"STATEa":0,"STATEb":1,"STATEnp":0,"STATEsp":242,"STATEflags":3,"STATEtick_counter":32674418,"STATEclk_timer_timestamp":32669696,"STATEprog_timer_timestamp":32674396,"STATEprog_timer_enabled":1,"STATEprog_timer_data":3,"STATEprog_timer_rld":7,"STATEcall_depth":3,"STATEinterrupts":[0,1,0,12,0,0,0,10,0,0,0,8,7,0,0,6,0,0,0,4,0,8,0,2],"STATEmemory":[48,0,15,18,136,0,0,0,57,20,20,0,0,0,0,0,0,0,0,0,0,0,0,81,62,174,8,125,6,148,15,12,196,0,0,5,0,240,0,0,0,0,0,16,240,5,16,17,0,1,203,0,20,177,20,21,12,16,15,168,1,240,15,6,1,5,8,0,0,0,0,0,255,28,255,28,29,255,29,255,0,127,80,43,63,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,119,113,23,119,113,23,125,112,23,125,119,1,134,4,216,144,248,46,5,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,60,122,110,110,122,60,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3,1,255,6,0,0,16,2,51,192,80,31,0,0,0,0,0,0,0,0,0,0,0,0,255,255,3,4,45,192,5,5,60,240,128,17,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,60,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,60,122,110,110,122,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,8,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,4,1,33,0,0,0],"STATEselected_icon":-1,"STATEshowing_attention_icon":0};
 
     if (saveStateDict.STATEpc === 0 || saveStateDict.STATEmemory[0] === null) return; // don't save bad saves and overwrite
-    
+
     localStorage.setItem(LAST_STATE_KEY, JSON.stringify(saveStateDict));
     console.log("Saved last state to js localstorage...");
 
@@ -383,7 +392,7 @@ function SaveStateAfterClosingApp(saveStateDict)
         (responseText) => { // success
             console.log("Successfully sent save state to server: " + responseText);
             Pebble.sendAppMessage({'JSMessage': "Saved to server!", 'JSFinishedSaving': 1}); // tell watch to finish quitting
-        }, 
+        },
         (error, response) => { // fail
             localStorage.setItem(SERVER_SAVE_FAILED_KEY, true); // keep track that this failed!
             console.log("Failed to send data to server. Error: " + error + "Response: " + response);
