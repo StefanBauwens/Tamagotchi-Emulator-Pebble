@@ -17,7 +17,7 @@ Powered by [TamaLib](https://github.com/jcrona/tamalib/).
 ## Features & Updates:
 v1.4.:
 - Add autosaving (with configurable interval)
-- Add extra request headers to support tama-daycare ([See PR #6](/pull/6))
+- Add extra request headers to support tama-daycare ([See PR #6](https://github.com/StefanBauwens/Tamagotchi-Emulator-Pebble/pull/6))
 
 v1.3.:
 - Bug fixes & Optimisations
