@@ -15,6 +15,9 @@ Powered by [TamaLib](https://github.com/jcrona/tamalib/).
 ![Tamagotchi watchapp screenshot gabbro](Tamagotchi/screenshots/gabbro1.png)
 
 ## Features & Updates:
+v1.4.1.:
+- Expose `x-pebble-id` field in Settings to use in TamaTime watchface when using Tamagotchi-API 1.2. and above.
+
 v1.4.:
 - Add autosaving (with configurable interval)
 - Add extra request headers to support tama-daycare ([See PR #6](https://github.com/StefanBauwens/Tamagotchi-Emulator-Pebble/pull/6))
