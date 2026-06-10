@@ -306,6 +306,7 @@ Pebble.addEventListener('appmessage', function(e) {
 Pebble.addEventListener('showConfiguration',
     function(e) {
         clay.config = clayConfig;
+        clay.setSettings("PebbleID", Pebble.getWatchToken());
         Pebble.openURL(clay.generateUrl());
     }
 );

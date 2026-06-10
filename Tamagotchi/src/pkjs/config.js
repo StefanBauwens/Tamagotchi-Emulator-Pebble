@@ -56,6 +56,16 @@ module.exports = [
         }
       },
       {
+        "type": "input",
+        "messageKey": "PebbleID",
+        "label": "x-pebble-id",
+        "defaultValue": "",
+        "attributes": {
+          "disabled": true
+        },
+        "description": "Read only. Use this value in TamaTime watchface.",
+      },
+      {
         "type": "toggle",
         "messageKey": "reset_tamagotchi",
         "label": "Reset Tamagotchi on Save",
