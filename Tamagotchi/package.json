@@ -52,7 +52,8 @@
             "JSMessage",
             "reset_tamagotchi",
             "JSFinishedSaving",
-            "AutosaveInterval"
+            "AutosaveInterval",
+            "PebbleID"
         ],
         "projectType": "native",
         "resources": {
@@ -279,5 +280,5 @@
             "configurable"
         ]
     },
-    "version": "1.4.0"
+    "version": "1.4.1"
 }
