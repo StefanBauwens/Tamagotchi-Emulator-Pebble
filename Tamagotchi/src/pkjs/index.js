@@ -7,10 +7,10 @@ const APIKEY_KEY = "APIKEY";
 const ROMURL_KEY = "ROMURL";
 const SERVER_SAVE_FAILED_KEY = "SERVER_SAVE_FAILED";
 
-const CURRENT_VERSION = "1.3";
+const CURRENT_VERSION = "1.5.0";
 const LAST_VERSION_NOTIFIED_KEY = "LAST_VERSION_NOTIFIED";
-const RELEASE_NOTE_TITLE = "Tamagotchi V1.3.0 Release Notes";
-const RELEASE_NOTE_BODY = "ATTENTION: Bug fixes + TamaLIB update. Old save states may no longer work and a reset is likely needed :( Update your Tamagotchi API Server manually if used."
+const RELEASE_NOTE_TITLE = "Tamagotchi V1.5.0 Release Notes";
+const RELEASE_NOTE_BODY = "- Added volume control.\n- Added option to use vibrations instead of the speaker."
 
 // Import the Clay package
 var Clay = require('@rebble/clay');
@@ -338,7 +338,13 @@ Pebble.addEventListener('webviewclosed',
             Pebble.sendAppMessage({'reset_tamagotchi': 1}); // tell watch to reset
         }
 
-        Pebble.sendAppMessage({'AutosaveInterval' : dict[messageKeys.AutosaveInterval]});
+        Pebble.sendAppMessage(
+            {
+                'AutosaveInterval' : dict[messageKeys.AutosaveInterval],
+                'Volume' : dict[messageKeys.Volume],
+                'UseVibrations' : dict[messageKeys.UseVibrations]
+            }
+        );
     }
 );
 

@@ -10,6 +10,8 @@
 
 // persistant storage keys
 #define AUTOSAVE_KEY 1
+#define VOLUME_KEY 2
+#define USEVIBRATIONS_KEY 3
 
 //#undef PBL_COLOR // only used for testing B&W
 
@@ -53,6 +55,8 @@ static VibePattern s_vibesPattern = {
   .durations = s_vibesSegments,
   .num_segments = 1,
 };
+static uint8_t s_volume = 100;
+static bool s_useVibrations = false; // if using pebble with speaker
 
 static bool_t s_screen_buffer[LCD_HEIGHT][LCD_WIDTH] = {{0}};
 #if defined(E0C6S48_SUPPORT)
@@ -163,20 +167,26 @@ static void hal_play_frequency(bool_t en) {
   if (en)
   {
     #if defined(PBL_SPEAKER)
-    speaker_stop(); 
-    speaker_play_tone(s_speakerFreq / 10, 5000, 100, SpeakerWaveformSquare);
+    if (!s_useVibrations) {
+      speaker_stop(); 
+      speaker_play_tone(s_speakerFreq / 10, 5000, s_volume, SpeakerWaveformSquare);
+    }
+    else // if use vibrations is set to true
+    {
+      vibes_enqueue_custom_pattern(s_vibesPattern);
+    }
     #else
-    /*VibePattern pat = {
-      .durations = {10000},
-      .num_segments = 1,
-    };*/
     vibes_enqueue_custom_pattern(s_vibesPattern);
     #endif
   }
   else
   {
     #if defined(PBL_SPEAKER)
-    speaker_stop();
+    if (!s_useVibrations) {
+      speaker_stop();
+    } else {
+      vibes_cancel();
+    }
     #else
     vibes_cancel();
     #endif
@@ -515,6 +525,22 @@ static void prv_inbox_received_handler(DictionaryIterator *iter, void *context) 
     }
   }
 
+  // handle volume
+  Tuple *Volume_t = dict_find(iter, MESSAGE_KEY_Volume);
+  if (Volume_t)
+  {
+    s_volume = Volume_t->value->uint8;
+    persist_write_int(VOLUME_KEY, s_volume);
+  }
+
+  // handle useVibrations
+  Tuple *UseVibrations_t = dict_find(iter, MESSAGE_KEY_UseVibrations);
+  if (UseVibrations_t)
+  {
+    s_useVibrations = (UseVibrations_t->value->uint8) == 1;
+    persist_write_bool(USEVIBRATIONS_KEY, s_useVibrations);
+  }
+
   // handle resetting
   Tuple *reset_tamagotchi_t = dict_find(iter, MESSAGE_KEY_reset_tamagotchi);
   if (reset_tamagotchi_t)
@@ -831,6 +857,14 @@ static void initTamalib() {
     APP_LOG(APP_LOG_LEVEL_DEBUG, "No save file");
     s_hasReceivedSaveFile = true;
     tamalib_init(g_program, NULL, 1000000);
+  }
+
+  // get volume and useVibrations from persistant storage
+  if (persist_exists(VOLUME_KEY)) {
+    s_volume = persist_read_int(VOLUME_KEY);
+  }
+  if (persist_exists(USEVIBRATIONS_KEY)) {
+    s_useVibrations = persist_read_bool(USEVIBRATIONS_KEY);
   }
 
   // start auto saving
