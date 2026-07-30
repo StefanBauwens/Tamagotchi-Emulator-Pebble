@@ -53,7 +53,9 @@
             "reset_tamagotchi",
             "JSFinishedSaving",
             "AutosaveInterval",
-            "PebbleID"
+            "PebbleID",
+            "Volume",
+            "UseVibrations"
         ],
         "projectType": "native",
         "resources": {
@@ -280,5 +282,5 @@
             "configurable"
         ]
     },
-    "version": "1.4.1"
+    "version": "1.5.0"
 }

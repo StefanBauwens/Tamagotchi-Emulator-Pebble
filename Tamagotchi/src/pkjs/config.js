@@ -34,13 +34,29 @@ module.exports = [
       {
         "type": "slider",
         "messageKey": "AutosaveInterval",
-        "defaultValue": 15,
         "label": "Autosave interval",
         "description": "Interval in minutes. 0 = No autosaving.",
         "min": 0,
         "max": 10,
         "step": 1,
         "defaultValue": 5
+      },
+      {
+        "type": "slider",
+        "messageKey": "Volume",
+        "label": "Volume",
+        "description": "Volume of beeps. Does nothing on non-speaker Pebbles.",
+        "min": 0,
+        "max": 100,
+        "step": 1,
+        "defaultValue": 100
+      },
+      {
+        "type": "toggle",
+        "messageKey": "UseVibrations",
+        "label": "Use vibrations instead of speaker",
+        "description": "Vibrations are always true for non-speaker Pebbles.",
+        "defaultValue": false
       },
       {
         "type": "text",
