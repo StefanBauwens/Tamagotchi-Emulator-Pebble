@@ -16,8 +16,8 @@ Powered by [TamaLib](https://github.com/jcrona/tamalib/).
 
 ## Features & Updates:
 v1.5.0.:
-- Added volume control (#5)
-- Added option to use vibrations instead of the speaker. (#8)
+- Added volume control ([#5](https://github.com/StefanBauwens/Tamagotchi-Emulator-Pebble/issues/5))
+- Added option to use vibrations instead of the speaker. ([#8](https://github.com/StefanBauwens/Tamagotchi-Emulator-Pebble/issues/8))
 
 v1.4.1.:
 - Expose `x-pebble-id` field in Settings to use in TamaTime watchface when using Tamagotchi-API 1.2. and above.
