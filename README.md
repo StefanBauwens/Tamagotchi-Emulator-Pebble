@@ -15,6 +15,9 @@ Powered by [TamaLib](https://github.com/jcrona/tamalib/).
 ![Tamagotchi watchapp screenshot gabbro](Tamagotchi/screenshots/gabbro1.png)
 
 ## Features & Updates:
+v1.5.1.:
+- Added option to reset localstorage on startup by quickly pressing down button.
+
 v1.5.0.:
 - Added volume control. ([#5](https://github.com/StefanBauwens/Tamagotchi-Emulator-Pebble/issues/5))
 - Added option to use vibrations instead of the speaker. ([#8](https://github.com/StefanBauwens/Tamagotchi-Emulator-Pebble/issues/8))

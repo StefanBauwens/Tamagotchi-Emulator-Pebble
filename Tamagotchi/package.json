@@ -55,7 +55,9 @@
             "AutosaveInterval",
             "PebbleID",
             "Volume",
-            "UseVibrations"
+            "UseVibrations",
+            "PebbleIsReady",
+            "ClearAll"
         ],
         "projectType": "native",
         "resources": {
@@ -282,5 +284,5 @@
             "configurable"
         ]
     },
-    "version": "1.5.0"
+    "version": "1.5.1"
 }
