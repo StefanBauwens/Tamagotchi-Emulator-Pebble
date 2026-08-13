@@ -57,6 +57,7 @@ static VibePattern s_vibesPattern = {
 };
 static uint8_t s_volume = 100;
 static bool s_useVibrations = false; // if using pebble with speaker
+static bool s_isPressingDownButton = false;
 
 static bool_t s_screen_buffer[LCD_HEIGHT][LCD_WIDTH] = {{0}};
 #if defined(E0C6S48_SUPPORT)
@@ -336,6 +337,7 @@ static void on_button_select_press(ClickRecognizerRef recognizer, void *context)
 }
 static void on_button_down_press(ClickRecognizerRef recognizer, void *context) //3
 {
+  s_isPressingDownButton = true;
   if (!s_hasReceivedRom || !s_hasReceivedSaveFile) return;
   tamalib_set_button(BTN_RIGHT, BTN_STATE_PRESSED);
 }
@@ -354,6 +356,7 @@ static void on_button_select_release(ClickRecognizerRef recognizer, void *contex
 }
 static void on_button_down_release(ClickRecognizerRef recognizer, void *context) //6
 {
+  s_isPressingDownButton = false;
   if (!s_hasReceivedRom || !s_hasReceivedSaveFile) return;
   tamalib_set_button(BTN_RIGHT, BTN_STATE_RELEASED);
 }
@@ -461,6 +464,39 @@ static void screen_update_proc(Layer *layer, GContext *ctx) {
   }
 }
 
+static bool send_dict_int(uint32_t key, int value) {
+  // Declare the dictionary's iterator
+  DictionaryIterator *out_iter;
+
+  // Prepare the outbox buffer for this message
+  AppMessageResult result = app_message_outbox_begin(&out_iter);
+  if(result == APP_MSG_OK) {
+    // Add an item to ask for weather data
+    dict_write_int(out_iter, key, &value, sizeof(int), true);
+
+    // Send this message
+    result = app_message_outbox_send();
+    if(result != APP_MSG_OK) {
+      // Error sending the outbox
+      return false;
+    } else {
+      return true;
+    }
+  } else {
+    // The outbox cannot be used right now
+    return false;;
+  }
+}
+
+static void delayed_ready_callback(void *context)
+{
+  if (s_isPressingDownButton) {
+    send_dict_int(MESSAGE_KEY_ClearAll, 0);
+  } else {
+    send_dict_int(MESSAGE_KEY_PebbleIsReady, 0);
+  }
+}
+
 static void prv_inbox_received_handler(DictionaryIterator *iter, void *context) {  
   APP_LOG(APP_LOG_LEVEL_DEBUG, "inbox received");
 
@@ -470,6 +506,8 @@ static void prv_inbox_received_handler(DictionaryIterator *iter, void *context) 
     // PebbleKit JS is ready! Safe to send messages
     s_js_ready = true;
     Message("Loading ROM 0%");
+
+    app_timer_register(750, delayed_ready_callback, NULL); // delayed so the user has time to press down button
   }
 
   // handle incoming rom
@@ -545,6 +583,7 @@ static void prv_inbox_received_handler(DictionaryIterator *iter, void *context) 
   Tuple *reset_tamagotchi_t = dict_find(iter, MESSAGE_KEY_reset_tamagotchi);
   if (reset_tamagotchi_t)
   {
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "Received reset request. Has Received rom? %d", s_hasReceivedRom);
     if (s_hasReceivedRom)
     {
       s_clearTextLayerOnScreenRefresh = true;
@@ -974,7 +1013,7 @@ static void saveCurrentState(bool saveAndQuit, char *saveMessage)
     dict_write_int(out_iter, MESSAGE_KEY_STATEselected_icon, &s_selectedIcon, sizeof(int8_t), true);
     dict_write_int(out_iter, MESSAGE_KEY_STATEshowing_attention_icon, &s_showingAttentionIcon, sizeof(int8_t), true);
 
-     dict_write_end(out_iter);
+    dict_write_end(out_iter);
     // Send this message
     result = app_message_outbox_send();
 

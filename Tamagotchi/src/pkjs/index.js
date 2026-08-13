@@ -277,24 +277,43 @@ Pebble.addEventListener('ready',
         // Update s_js_ready on watch
         Pebble.sendAppMessage({'JSReady': 1});
 
-        let lastVersionNotified = localStorage.getItem(LAST_VERSION_NOTIFIED_KEY);
-        if (lastVersionNotified === null || lastVersionNotified !== CURRENT_VERSION)
-        {
-            Pebble.showSimpleNotificationOnPebble(
-                RELEASE_NOTE_TITLE,
-                RELEASE_NOTE_BODY
-            );
-            localStorage.setItem(LAST_VERSION_NOTIFIED_KEY, CURRENT_VERSION);
-        }
-
-        FetchROM();
+        // Don't add anything more here. Use PebbleIsReady function instead.
     }
 );
+
+function PebbleIsReady() { // Gets called when Pebble is ready to received ROM and start
+    console.log("Pebble ready to receive ROM from JS!");
+
+    // show release notes
+    let lastVersionNotified = localStorage.getItem(LAST_VERSION_NOTIFIED_KEY);
+    if (lastVersionNotified === null || lastVersionNotified !== CURRENT_VERSION)
+    {
+        Pebble.showSimpleNotificationOnPebble(
+            RELEASE_NOTE_TITLE,
+            RELEASE_NOTE_BODY
+        );
+        localStorage.setItem(LAST_VERSION_NOTIFIED_KEY, CURRENT_VERSION);
+    }
+
+    // fetch rom, send it to pebble, etc...
+    FetchROM();
+}
 
 // Listen for appmessage
 Pebble.addEventListener('appmessage', function(e) {
     var dict = e.payload;
     console.log("Got message: " + JSON.stringify(dict));
+
+    if ("PebbleIsReady" in dict)
+    {
+        PebbleIsReady();
+    }
+
+    if ("ClearAll" in dict)
+    {
+        localStorage.clear();
+        PebbleIsReady();
+    }
 
     if ('STATEpc' in dict)
     {
@@ -358,9 +377,10 @@ function SaveStateAfterClosingApp(saveStateDict)
     localStorage.setItem(LAST_STATE_KEY, JSON.stringify(saveStateDict));
     console.log("Saved last state to js localstorage...");
 
-    if(localStorage.getItem(APISERVER_KEY) !== null)
+
+    if(localStorage.getItem(APISERVER_KEY) !== null && localStorage.getItem(APISERVER_KEY) !== "")
     {
-        console.log("Sending save to server as well...");
+        console.log("Sending save to server as well. Server: " + localStorage.getItem(APISERVER_KEY) + ".");
         let payload = {
             'pc': saveStateDict.STATEpc,
             'x': saveStateDict.STATEx,
